@@ -309,10 +309,9 @@ export async function itemTimeline(db: Db, siteId: string, itemId: string): Prom
               cl.quantity::text || ' ' || cl.unit as quantity,
               coalesce(cl.note, l.code) as detail,
               cl.received_at as "recordedAt",
-              coalesce(u.email, 'unknown') as actor
+              case when cl.counted_by is null then 'Unknown counter' else 'Signed-in counter' end as actor
          from count_lines cl
          left join locations l on l.id = cl.location_id
-         left join auth.users u on u.id = cl.counted_by
         where cl.site_id = $1 and cl.item_id = $2 and not cl.superseded
 
        union all

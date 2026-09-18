@@ -12,9 +12,9 @@ export default async function Audit() {
     const site = (await listSites(db))[0];
     if (!site) return [];
     return db.query<{
-      id: string; created_at: string; event_type: string; object_type: string; actor_type: string; actor_label: string | null; email: string | null; detail: Record<string, unknown>;
-    }>(`select ae.id, ae.created_at, ae.event_type, ae.object_type, ae.actor_type, ae.actor_label, u.email, ae.detail
-          from audit_events ae left join auth.users u on u.id = ae.actor_user_id
+      id: string; created_at: string; event_type: string; object_type: string; actor_type: string; actor_label: string | null; detail: Record<string, unknown>;
+    }>(`select ae.id, ae.created_at, ae.event_type, ae.object_type, ae.actor_type, ae.actor_label, ae.detail
+          from audit_events ae
          where ae.site_id = $1 order by ae.created_at desc limit 250`, [site.id]);
   });
 
@@ -24,7 +24,7 @@ export default async function Audit() {
 
   return (
     <>
-      <section className="page-intro slim-intro"><div><div className="kicker">Black-box recorder</div><h1>Nothing quietly disappears.<br /><span>The history is part of the product.</span></h1><p className="lede">Counts, reconciliations and human resolutions are recorded as events. This screen is for answering “what changed, who did it, and when?” without writing SQL.</p></div><div className="intro-meta"><div><span>Events</span><strong>{events.length}</strong></div><div><span>Engine</span><strong>{engine}</strong></div><div><span>Human</span><strong>{people}</strong></div></div></section>
+      <section className="page-intro slim-intro"><div><div className="kicker">Black-box recorder</div><h1>Nothing quietly disappears.<br /><span>The history is part of the product.</span></h1><p className="lede">Counts, reconciliations and human resolutions are recorded as events. This screen is for answering â€œwhat changed, who did it, and when?â€ without writing SQL.</p></div><div className="intro-meta"><div><span>Events</span><strong>{events.length}</strong></div><div><span>Engine</span><strong>{engine}</strong></div><div><span>Human</span><strong>{people}</strong></div></div></section>
 
       <div className="audit-header"><span>{types} event types in the current view</span><span>Newest first / append-only source</span></div>
       {events.length === 0 ? <div className="empty-state"><span>NO EVENTS</span><h2>The recorder is empty.</h2></div> : (
@@ -36,7 +36,7 @@ export default async function Audit() {
               <div className={`audit-mark actor-${e.actor_type}`}><span /></div>
               <div className="audit-body">
                 <div className="audit-title"><strong>{e.event_type.replaceAll('_', ' ').toLowerCase()}</strong><span>{e.object_type}</span></div>
-                <p>{e.email ?? e.actor_label ?? e.actor_type}</p>
+                <p>{e.actor_label ?? (e.actor_type === 'user' ? 'Signed-in user' : e.actor_type)}</p>
                 {detail.length > 0 && <details><summary>Event detail</summary><dl>{detail.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{String(v)}</dd></div>)}</dl></details>}
               </div>
             </article>;

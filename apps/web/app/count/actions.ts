@@ -114,10 +114,9 @@ export async function lookupCode(siteId: string, raw: string): Promise<LookupRes
       [siteId, item.id],
     );
 
-    const last = await db.one<{ quantity: string; counted_at: string; email: string | null }>(
-      `select cl.quantity::text, cl.counted_at, u.email
+    const last = await db.one<{ quantity: string; counted_at: string; counted_by: string | null }>(
+      `select cl.quantity::text, cl.counted_at, cl.counted_by::text as counted_by
          from count_lines cl
-         left join auth.users u on u.id = cl.counted_by
         where cl.site_id = $1 and cl.item_id = $2 and not cl.superseded
         order by cl.counted_at desc limit 1`,
       [siteId, item.id],
@@ -128,7 +127,7 @@ export async function lookupCode(siteId: string, raw: string): Promise<LookupRes
       item: { id: item.id, sku: item.sku, name: item.name, stockUnit: item.stock_unit },
       book: book ? { quantity: book.quantity, asOf: book.as_of } : null,
       lastCount: last
-        ? { quantity: last.quantity, countedAt: last.counted_at, by: last.email }
+        ? { quantity: last.quantity, countedAt: last.counted_at, by: last.counted_by ? 'Signed-in counter' : null }
         : null,
     };
   });
