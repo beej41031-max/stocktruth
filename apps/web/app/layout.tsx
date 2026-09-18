@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import './globals.css';
 import Nav from './Nav';
+import TopBar from './TopBar';
 
 export const metadata = {
   title: 'StockTruth',
@@ -13,7 +14,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <div className="shell">
           <Nav />
-          <div className="content">{children}</div>
+          <div className="workspace">
+            <TopBar />
+            <main className="content">{children}</main>
+          </div>
         </div>
       </body>
     </html>
