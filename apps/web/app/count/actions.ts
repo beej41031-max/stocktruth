@@ -337,10 +337,16 @@ export async function resolveIssue(input: ResolveInput): Promise<{ ok: boolean; 
 
     await db.query(
       `update reconciliation_issues
-          set status = $2, resolution = $3, resolution_note = $4,
-              resolved_by = $5, resolved_at = case when $2 = 'resolved' then now() else null end,
-              recount_requested = $6
-        where id = $1`,
+          set status = $2::public.issue_status,
+              resolution = $3::public.issue_resolution,
+              resolution_note = $4,
+              resolved_by = $5::uuid,
+              resolved_at = case
+                when $2::public.issue_status = 'resolved'::public.issue_status then now()
+                else null
+              end,
+              recount_requested = $6::boolean
+        where id = $1::uuid`,
       [
         input.issueId,
         keepOpen ? 'open' : 'resolved',

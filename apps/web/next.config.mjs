@@ -5,6 +5,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 export default {
+  transpilePackages: ['@stocktruth/engine'],
+  outputFileTracingRoot: resolve(here, '../..'),
   // pg opens real sockets; it must not be bundled into the server build.
   serverExternalPackages: ['pg'],
   webpack(config) {

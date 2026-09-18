@@ -30,7 +30,7 @@ function pool(): Pool {
     if (!connectionString) throw new Error('DATABASE_URL is not set');
     globalThis.__stocktruthPool = new Pool({
       connectionString,
-      max: 10,
+      max: 1,
       idleTimeoutMillis: 30_000,
       // Supabase's pooler terminates idle sessions; failing fast is better than
       // a page hanging on a dead socket.
