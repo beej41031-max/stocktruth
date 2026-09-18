@@ -24,7 +24,7 @@ export default async function Audit() {
 
   return (
     <>
-      <section className="page-intro slim-intro"><div><div className="kicker">Black-box recorder</div><h1>Nothing quietly disappears.<br /><span>The history is part of the product.</span></h1><p className="lede">Counts, reconciliations and human resolutions are recorded as events. This screen is for answering â€œwhat changed, who did it, and when?â€ without writing SQL.</p></div><div className="intro-meta"><div><span>Events</span><strong>{events.length}</strong></div><div><span>Engine</span><strong>{engine}</strong></div><div><span>Human</span><strong>{people}</strong></div></div></section>
+      <section className="page-intro slim-intro"><div><div className="kicker">Black-box recorder</div><h1>Nothing quietly disappears.<br /><span>The history is part of the product.</span></h1><p className="lede">Counts, reconciliations and human resolutions are recorded as events. This screen is for answering Ã¢â‚¬Å“what changed, who did it, and when?Ã¢â‚¬Â without writing SQL.</p></div><div className="intro-meta"><div><span>Events</span><strong>{events.length}</strong></div><div><span>Engine</span><strong>{engine}</strong></div><div><span>Human</span><strong>{people}</strong></div></div></section>
 
       <div className="audit-header"><span>{types} event types in the current view</span><span>Newest first / append-only source</span></div>
       {events.length === 0 ? <div className="empty-state"><span>NO EVENTS</span><h2>The recorder is empty.</h2></div> : (
