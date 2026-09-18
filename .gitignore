@@ -1,0 +1,9 @@
+node_modules/
+.next/
+.env
+.env.local
+*.tsbuildinfo
+.DS_Store
+.vercel/
+*.log
+supabase/demo-setup.local.sql

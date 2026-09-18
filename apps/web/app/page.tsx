@@ -1,0 +1,198 @@
+import Link from 'next/link';
+import { withUser } from '@/lib/db';
+import { currentUserId } from '@/lib/session';
+import { listSites, siteConfidence, dataHealth, openIssues } from '@/lib/queries/read';
+import { REASONS, type ReasonDefinition } from '@stocktruth/engine';
+
+export const dynamic = 'force-dynamic';
+
+function ago(iso: string | null): string {
+  if (!iso) return 'never';
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (days === 0) return 'today';
+  if (days === 1) return 'yesterday';
+  return `${days} days ago`;
+}
+
+export default async function Control() {
+  const userId = await currentUserId();
+
+  const data = await withUser(userId, async (db) => {
+    const sites = await listSites(db);
+    const site = sites[0];
+    if (!site) return null;
+    // One connection, one transaction: these run in order.
+    const confidence = await siteConfidence(db, site.id);
+    const health = await dataHealth(db, site.id);
+    const issues = await openIssues(db, site.id, 12);
+    return { site, confidence, health, issues };
+  });
+
+  if (!data) {
+    return (
+      <p className="empty">
+        No sites yet. Once a site exists and a book position has been imported, this page
+        shows how much of it anyone has actually checked.
+      </p>
+    );
+  }
+
+  const { site, confidence, health, issues } = data;
+
+  // The headline counts only what has been physically checked recently enough
+  // to mean something. Provisional counts, because a caveat is not a failure to
+  // verify. Stale does not, because that is precisely the point of stale.
+  const trusted = confidence.verified + confidence.provisional;
+  const pct = confidence.total ? Math.round((trusted / confidence.total) * 100) : 0;
+
+  return (
+    <>
+      <h1>{site.name}</h1>
+      <p className="sub">
+        Last reconciled {ago(confidence.lastRunAt)}
+        {confidence.engineVersion ? ` by engine ${confidence.engineVersion}` : ''}.
+      </p>
+
+      <div className="headline">
+        <div className="figure">{pct}%</div>
+        <p className="caption">
+          {trusted} of {confidence.total} stock positions rest on a physical count recent
+          enough to rely on.{' '}
+          {confidence.unverified > 0 && (
+            <>
+              {confidence.unverified} {confidence.unverified === 1 ? 'has' : 'have'} never been
+              counted at all.
+            </>
+          )}
+        </p>
+      </div>
+
+      <div className="states">
+        {(
+          [
+            ['VERIFIED', confidence.verified, 'verified'],
+            ['PROVISIONAL', confidence.provisional, 'with caveats'],
+            ['STALE', confidence.stale, 'out of date'],
+            ['INCOMPLETE', confidence.incomplete, 'cannot be stated'],
+            ['CONFLICT', confidence.conflict, 'contradictory'],
+            ['UNVERIFIED', confidence.unverified, 'never counted'],
+          ] as const
+        ).map(([state, n, label]) => (
+          <div className="state" key={state}>
+            <div className={`n st-${state}`}>{n}</div>
+            <div className="l">{label}</div>
+          </div>
+        ))}
+      </div>
+
+      <h2>Data health</h2>
+      <table>
+        <tbody>
+          <HealthRow
+            label="Movements not linked to any item"
+            value={health.unlinkedMovements}
+            note="Until these are linked, any position they might belong to carries a caveat."
+            href="/movements"
+          />
+          <HealthRow
+            label="Movements with no date"
+            value={health.undatedMovements}
+            note="These cannot be placed before or after a count, so they are left out of every figure."
+            href="/movements"
+          />
+          <HealthRow
+            label="Codes blocked as unsafe to use"
+            value={health.blockedItems}
+            note="Counting against these is refused until somebody decides what they mean."
+            href="/items"
+          />
+          <HealthRow
+            label="Barcodes printed on more than one item"
+            value={health.sharedBarcodes}
+            note="A scan cannot tell these apart, so the scanner asks rather than guessing."
+            href="/items"
+          />
+          {health.staleSources.map((s) => (
+            <tr key={s.name}>
+              <td>{s.name} has stopped delivering</td>
+              <td className="num st-STALE">{ago(s.lastSuccessAt)}</td>
+              <td className="dim">
+                Expected every {s.expectedSyncMinutes} minutes. Recent movements may be missing.
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h2>What needs attention</h2>
+      {issues.length === 0 ? (
+        <p className="empty">Nothing open. Either everything reconciles, or nothing has been counted yet.</p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Problem</th>
+              <th className="num">Book</th>
+              <th className="num">Counted</th>
+              <th className="num">Now</th>
+            </tr>
+          </thead>
+          <tbody>
+            {issues.map((issue) => {
+              const def = (REASONS as Record<string, ReasonDefinition>)[issue.code];
+              return (
+                <tr key={issue.id}>
+                  <td>
+                    {issue.itemId ? (
+                      <Link href={`/items/${issue.itemId}`} className="code">
+                        {issue.sku ?? issue.itemName}
+                      </Link>
+                    ) : (
+                      <span className="dim">site-wide</span>
+                    )}
+                    <div className="dim">{issue.itemName}</div>
+                  </td>
+                  <td>
+                    <span className={issue.severity === 'high' ? 'st-CONFLICT' : 'st-STALE'}>
+                      {def?.short ?? issue.code}
+                    </span>
+                    <div className="dim">{def?.action}</div>
+                  </td>
+                  <td className="num">{issue.bookQuantity ?? '—'}</td>
+                  <td className="num">{issue.physicalQuantity ?? '—'}</td>
+                  <td className="num">
+                    {issue.derivedQuantity ?? <span className="none">not stated</span>}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+    </>
+  );
+}
+
+function HealthRow({
+  label,
+  value,
+  note,
+  href,
+}: {
+  label: string;
+  value: number;
+  note: string;
+  href: string;
+}) {
+  if (value === 0) return null;
+  return (
+    <tr>
+      <td>
+        <Link href={href}>{label}</Link>
+      </td>
+      <td className="num st-STALE">{value}</td>
+      <td className="dim">{note}</td>
+    </tr>
+  );
+}

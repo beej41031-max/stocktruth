@@ -1,0 +1,447 @@
+/*
+ * StockTruth.
+ *
+ * The visual argument: this is an instrument, not a dashboard. It reports what
+ * is known and refuses what is not, so it should read like something in a
+ * control room rather than something in a pitch deck. Dense, quiet, legible at
+ * arm's length, willing to leave space where there is nothing to say.
+ *
+ * Two rules held throughout:
+ *
+ *   A state is never carried by colour alone. Everything coloured also says
+ *   what it is in words, for a colourblind reader, a badly lit store, or a
+ *   printout.
+ *
+ *   A refused number is never a dash, a blank or a zero. It says so, in words.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap');
+
+:root {
+  /* Near-black with a cool cast, so one amber accent has somewhere to sit
+     without the whole thing reading as a terminal emulator. */
+  --ground: #101215;
+  --raised: #171a1e;
+  --panel: #1c2025;
+  --line: #262b31;
+  --line-soft: #1e2227;
+
+  --ink: #eef1f4;
+  --ink-2: #aeb8c2;
+  --muted: #74808c;
+  --faint: #4d565f;
+
+  /* One accent, used for structure and for what needs attention. Never for
+     decoration. */
+  --mark: #e8a33d;
+
+  --verified: #4ec97f;
+  --provisional: #7fa8d4;
+  --stale: #e8a33d;
+  --incomplete: #e8a33d;
+  --conflict: #e8615c;
+  --unverified: #66727e;
+
+  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --rail: 208px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a { color: inherit; text-decoration: none; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--mark);
+  outline-offset: 2px;
+}
+
+/* --- shell --------------------------------------------------------------- */
+
+.shell { display: flex; min-height: 100vh; }
+
+.rail {
+  width: var(--rail);
+  flex: 0 0 var(--rail);
+  border-right: 1px solid var(--line);
+  padding: 22px 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.wordmark {
+  display: block;
+  padding: 0 22px 4px;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: -0.2px;
+}
+.wordmark span { color: var(--mark); }
+
+.tagline {
+  padding: 0 22px 14px;
+  color: var(--faint);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.demo-mark {
+  margin: 0 22px 10px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.03em;
+}
+
+.rail nav { display: flex; flex-direction: column; }
+
+.rail nav a {
+  padding: 9px 22px;
+  color: var(--muted);
+  font-size: 14px;
+  border-left: 2px solid transparent;
+}
+.rail nav a:hover { color: var(--ink-2); background: var(--raised); }
+.rail nav a[aria-current='page'] {
+  color: var(--ink);
+  border-left-color: var(--mark);
+  background: var(--raised);
+}
+
+.rail .group {
+  padding: 22px 22px 6px;
+  color: var(--faint);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.content { flex: 1; min-width: 0; padding: 30px 34px 90px; max-width: 1180px; }
+
+@media (max-width: 760px) {
+  .shell { flex-direction: column; }
+  .rail {
+    width: auto; flex: none; height: auto; position: static;
+    border-right: 0; border-bottom: 1px solid var(--line); padding: 14px 0 0;
+  }
+  .tagline, .demo-mark { display: none; }
+  .rail nav { flex-direction: row; overflow-x: auto; }
+  .rail nav a { border-left: 0; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .rail nav a[aria-current='page'] { border-left: 0; border-bottom-color: var(--mark); }
+  .rail .group { display: none; }
+  .content { padding: 22px 18px 70px; }
+}
+
+/* --- headings ------------------------------------------------------------ */
+
+h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.3px; margin: 0 0 3px; }
+
+h2 {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 40px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.sub { color: var(--muted); font-size: 14px; margin: 0 0 26px; max-width: 70ch; }
+.sub a { color: var(--ink-2); border-bottom: 1px solid var(--line); }
+
+/* --- the headline -------------------------------------------------------- */
+
+.headline { padding: 14px 0 30px; margin-bottom: 4px; }
+
+.headline .figure {
+  font-family: var(--mono);
+  font-size: clamp(54px, 9vw, 78px);
+  font-weight: 500;
+  letter-spacing: -3px;
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+}
+
+.headline .caption {
+  color: var(--ink-2);
+  margin-top: 16px;
+  max-width: 58ch;
+  line-height: 1.65;
+  font-size: 15px;
+}
+.headline .caption strong { color: var(--ink); font-weight: 500; }
+
+/* --- state strip --------------------------------------------------------- */
+
+.states {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(122px, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.states .state {
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 15px 16px;
+}
+.states .state .n {
+  font-family: var(--mono);
+  font-size: 25px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.states .state .l { color: var(--muted); font-size: 12px; margin-top: 3px; }
+
+.st-VERIFIED { color: var(--verified); }
+.st-PROVISIONAL { color: var(--provisional); }
+.st-STALE, .st-INCOMPLETE { color: var(--stale); }
+.st-CONFLICT { color: var(--conflict); }
+.st-UNVERIFIED { color: var(--unverified); }
+
+/* --- tables -------------------------------------------------------------- */
+
+.scroll { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+
+th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+  padding: 0 16px 9px 0;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+td {
+  padding: 13px 16px 13px 0;
+  border-bottom: 1px solid var(--line-soft);
+  vertical-align: top;
+  font-size: 14px;
+}
+
+tbody tr:hover td { background: rgba(255, 255, 255, 0.015); }
+tbody tr:last-child td { border-bottom: 0; }
+
+.num {
+  text-align: right;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.code { font-family: var(--mono); font-size: 13px; letter-spacing: -0.1px; }
+a.code { border-bottom: 1px solid var(--line); }
+a.code:hover { border-bottom-color: var(--mark); }
+
+.dim { color: var(--muted); font-size: 12.5px; }
+.faint { color: var(--faint); font-size: 12.5px; }
+
+/* A number the system will not state. Never a dash, never blank, never 0. */
+.none {
+  color: var(--muted);
+  font-style: italic;
+  font-family: var(--sans);
+  font-size: 13px;
+}
+
+/* --- the truth view ------------------------------------------------------ */
+
+.truth {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  border: 1px solid var(--line);
+  margin: 22px 0 10px;
+  background: var(--line);
+  gap: 1px;
+}
+
+.truth > div { background: var(--raised); padding: 18px 20px 20px; }
+
+.truth .label {
+  color: var(--faint);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.truth .value {
+  font-family: var(--mono);
+  font-size: 32px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1.2px;
+  line-height: 1.05;
+}
+.truth .value.refused {
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 450;
+  letter-spacing: 0;
+  color: var(--muted);
+  font-style: italic;
+}
+.truth .when { color: var(--muted); font-size: 12px; margin-top: 10px; line-height: 1.5; }
+
+/* --- reasons ------------------------------------------------------------- */
+
+.reason {
+  border-left: 2px solid var(--line);
+  padding: 11px 0 11px 16px;
+  margin: 12px 0;
+  max-width: 72ch;
+}
+.reason.high { border-left-color: var(--conflict); }
+.reason.medium { border-left-color: var(--stale); }
+.reason.low { border-left-color: var(--line); }
+.reason .what { font-size: 14.5px; }
+.reason .do { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.reason .ev {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--faint);
+  margin-top: 6px;
+  word-break: break-all;
+}
+
+/* --- timeline ------------------------------------------------------------ */
+
+.timeline { border-left: 1px solid var(--line); margin-top: 10px; }
+
+.entry { padding: 13px 0 13px 20px; position: relative; }
+.entry:before {
+  content: '';
+  position: absolute;
+  left: -3px;
+  top: 20px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--faint);
+}
+.entry.count:before { background: var(--verified); }
+.entry.movement:before { background: var(--provisional); }
+.entry.book:before { background: var(--muted); }
+
+.entry .top { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+.entry .when { font-family: var(--mono); font-size: 12px; color: var(--muted); min-width: 108px; }
+.entry .what { font-size: 14px; }
+.entry .qty { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 13.5px; }
+.entry .note { color: var(--muted); font-size: 12.5px; margin-top: 3px; padding-left: 122px; }
+
+/* The gap between a thing happening and somebody writing it down. It is the
+   reason some numbers cannot be stated, so it is not a footnote. */
+.entry .lag { color: var(--stale); font-size: 12.5px; margin-top: 5px; padding-left: 122px; }
+
+@media (max-width: 620px) {
+  .entry .note, .entry .lag { padding-left: 0; }
+  .entry .when { min-width: 0; }
+}
+
+/* --- forms --------------------------------------------------------------- */
+
+input, select, button, textarea { font-family: inherit; font-size: 15px; }
+
+input[type='text'], input[type='search'], input[type='number'], select {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  padding: 10px 12px;
+  width: 100%;
+}
+input::placeholder { color: var(--faint); }
+
+/* Used one-handed at a rack, so oversized on purpose. */
+input.scan {
+  font-family: var(--mono);
+  font-size: 24px;
+  padding: 14px;
+  letter-spacing: 0.5px;
+}
+input.qty {
+  font-family: var(--mono);
+  font-size: 28px;
+  padding: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  background: var(--mark);
+  color: #13161a;
+  border: 0;
+  border-radius: 4px;
+  padding: 11px 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+button:hover { filter: brightness(1.08); }
+button:disabled { opacity: 0.38; cursor: default; filter: none; }
+button.big { width: 100%; padding: 16px; font-size: 17px; }
+button.quiet {
+  background: transparent;
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+  font-weight: 450;
+  padding: 9px 14px;
+}
+button.quiet:hover { border-color: var(--muted); color: var(--ink); filter: none; }
+
+label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 7px; }
+.field { margin-bottom: 18px; }
+.narrow { max-width: 440px; }
+
+/* --- misc ---------------------------------------------------------------- */
+
+.empty { color: var(--muted); padding: 36px 0; max-width: 56ch; line-height: 1.7; }
+
+.tag {
+  display: inline-block;
+  font-size: 11px;
+  font-family: var(--mono);
+  padding: 2px 7px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--muted);
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.tag.warn { color: var(--stale); border-color: rgba(232, 163, 61, 0.4); }
+.tag.bad { color: var(--conflict); border-color: rgba(232, 97, 92, 0.4); }
+
+.banner {
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--mark);
+  background: var(--raised);
+  padding: 14px 18px;
+  margin: 18px 0;
+  max-width: 72ch;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.banner.bad { border-left-color: var(--conflict); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
