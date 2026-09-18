@@ -21,7 +21,13 @@ const GROUPS: [string, [string, string][]][] = [
       ['/reconcile', 'Reconcile'],
     ],
   ],
-  ['Record', [['/audit', 'Audit']]],
+  [
+    'Record',
+    [
+      ['/audit', 'Audit'],
+      ['/stress', 'Stress test'],
+    ],
+  ],
 ];
 
 export default function Nav() {

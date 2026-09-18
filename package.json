@@ -12,7 +12,8 @@
     "build": "npm run build --workspace apps/web",
     "typecheck": "npm run typecheck --workspace apps/web",
     "reconcile": "npm run reconcile --workspace apps/web",
-    "explain": "npm run explain --workspace apps/web --"
+    "explain": "npm run explain --workspace apps/web --",
+    "stress": "npm run stress --workspace apps/web --"
   },
   "engines": {
     "node": ">=22"

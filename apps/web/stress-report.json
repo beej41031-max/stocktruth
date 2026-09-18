@@ -1,0 +1,65 @@
+{
+  "ready": true,
+  "generatedAt": "2026-09-18T01:27:30.620Z",
+  "label": "Local runner â†’ hosted Supabase",
+  "itemCount": 10000,
+  "evidenceRows": 102500,
+  "bookSnapshots": 9166,
+  "countLines": 9167,
+  "movements": 84167,
+  "movementsPerItem": 8,
+  "timingsMs": {
+    "seed": 7033,
+    "adapterLoad": 6898,
+    "reconcile": 99,
+    "total": 14030
+  },
+  "scopesPerSecond": 100741,
+  "states": {
+    "VERIFIED": 2501,
+    "PROVISIONAL": 2501,
+    "STALE": 833,
+    "INCOMPLETE": 1666,
+    "CONFLICT": 1666,
+    "UNVERIFIED": 833
+  },
+  "topReasons": [
+    {
+      "reason": "NO_BOOK_POSITION",
+      "count": 834
+    },
+    {
+      "reason": "SUSPECTED_DUPLICATE_MOVEMENT",
+      "count": 834
+    },
+    {
+      "reason": "CLOCK_SKEW",
+      "count": 833
+    },
+    {
+      "reason": "COUNT_STALE",
+      "count": 833
+    },
+    {
+      "reason": "ITEM_BLOCKED",
+      "count": 833
+    },
+    {
+      "reason": "MOVEMENT_SPANS_COUNT",
+      "count": 833
+    },
+    {
+      "reason": "MOVEMENT_UNDATED",
+      "count": 833
+    },
+    {
+      "reason": "NEGATIVE_DERIVED_POSITION",
+      "count": 833
+    },
+    {
+      "reason": "NEVER_COUNTED",
+      "count": 833
+    }
+  ],
+  "invariantFailures": []
+}

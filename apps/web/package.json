@@ -10,7 +10,8 @@
     "test": "tsx --test 'lib/**/*.test.ts'",
     "typecheck": "tsc --noEmit",
     "reconcile": "tsx scripts/reconcile.ts",
-    "explain": "tsx scripts/explain.ts"
+    "explain": "tsx scripts/explain.ts",
+    "stress": "tsx scripts/stress.ts"
   },
   "devDependencies": {
     "@types/node": "^22.20.3",
