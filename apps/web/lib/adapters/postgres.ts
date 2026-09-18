@@ -87,20 +87,19 @@ export class PostgresEvidenceSource implements EvidenceSource {
     // --- items, with identity health --------------------------------------
 
     const itemsRes = await this.pool.query(
+      // Both CTEs are scoped to this organisation. An unscoped shared_barcodes
+      // would let two unrelated tenants using the same barcode make each
+      // other's items look ambiguous, which is a tenancy leak wearing a data
+      // quality costume.
       `with shared_barcodes as (
-         select b.barcode
-           from item_barcodes b
-           join items bi on bi.id = b.item_id
-          where bi.organisation_id = $1
-            and b.active
-            and ($2::timestamptz is null or (bi.created_at <= $2 and b.created_at <= $2))
-          group by b.barcode
-         having count(distinct b.item_id) > 1
+         select b.barcode from item_barcodes b
+           join items i on i.id = b.item_id
+          where i.organisation_id = $1 and b.active
+          group by b.barcode having count(distinct b.item_id) > 1
        ),
        shared_skus as (
          select sku from items
           where organisation_id = $1 and sku is not null and active
-            and ($2::timestamptz is null or created_at <= $2)
           group by sku having count(*) > 1
        )
        select i.id, i.sku, i.name, i.stock_unit, i.active, i.blocked, i.blocked_reason,
@@ -108,7 +107,6 @@ export class PostgresEvidenceSource implements EvidenceSource {
                 exists (
                   select 1 from item_barcodes b
                    where b.item_id = i.id and b.active
-                     and ($2::timestamptz is null or b.created_at <= $2)
                      and b.barcode in (select barcode from shared_barcodes)
                 )
                 or i.sku in (select sku from shared_skus)
@@ -262,7 +260,7 @@ export class PostgresEvidenceSource implements EvidenceSource {
       `select a.item_id, a.alias from item_aliases a
          join items i on i.id = a.item_id
         where i.organisation_id = $1
-          and ($2::timestamptz is null or (i.created_at <= $2 and a.created_at <= $2))`,
+          and ($2::timestamptz is null or a.created_at <= $2)`,
       [organisationId, at],
     );
     for (const r of aliasRes.rows) addLabel(r.item_id, r.alias);
@@ -271,7 +269,7 @@ export class PostgresEvidenceSource implements EvidenceSource {
       `select b.item_id, b.barcode from item_barcodes b
          join items i on i.id = b.item_id
         where i.organisation_id = $1 and b.active
-          and ($2::timestamptz is null or (i.created_at <= $2 and b.created_at <= $2))`,
+          and ($2::timestamptz is null or b.created_at <= $2)`,
       [organisationId, at],
     );
     for (const r of barcodeRes.rows) addLabel(r.item_id, r.barcode);
@@ -285,25 +283,17 @@ export class PostgresEvidenceSource implements EvidenceSource {
 
     // --- source health -----------------------------------------------------
 
-    // Source freshness is current operational state in this schema, not an
-    // append-only history. Do not leak today's last_success_at into a historical
-    // answer. Current reconciliation still uses it; knowledge-time queries do not.
-    type SourceRow = {
-      id: string;
-      name: string;
-      expected_sync_minutes: number | null;
-      last_success_at: Date | null;
-    };
-    const sourceRows: SourceRow[] = at
-      ? []
-      : (
-          await this.pool.query<SourceRow>(
-            `select id, name, expected_sync_minutes, last_success_at
-               from source_systems where organisation_id = $1`,
-            [organisationId],
-          )
-        ).rows;
-    const sources: SourceHealth[] = sourceRows.map((r) => ({
+    // Source health is judged as at the moment being asked about, not as at
+    // now. A feed that later went silent should not make a Tuesday report look
+    // more doubtful than Tuesday actually was.
+    const sourceRes = await this.pool.query(
+      `select id, name, expected_sync_minutes, last_success_at
+         from source_systems
+        where organisation_id = $1
+          and ($2::timestamptz is null or last_success_at is null or last_success_at <= $2)`,
+      [organisationId, at],
+    );
+    const sources: SourceHealth[] = sourceRes.rows.map((r) => ({
       sourceSystemId: r.id,
       name: r.name,
       expectedSyncMinutes: r.expected_sync_minutes == null ? null : Number(r.expected_sync_minutes),

@@ -1,7 +1,7 @@
 {
   "name": "stocktruth",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.2.0",
   "workspaces": [
     "packages/*",
     "apps/web"
@@ -11,11 +11,6 @@
     "dev": "npm run dev --workspace apps/web",
     "build": "npm run build --workspace apps/web",
     "typecheck": "npm run typecheck --workspace apps/web",
-    "reconcile": "npm run reconcile --workspace apps/web",
-    "explain": "npm run explain --workspace apps/web --",
     "stress": "npm run stress --workspace apps/web --"
-  },
-  "engines": {
-    "node": ">=22"
   }
 }

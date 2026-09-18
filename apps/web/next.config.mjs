@@ -5,11 +5,6 @@ const here = dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 export default {
-  // Keep Next inside this monorepo. Bijan has other npm projects higher up the
-  // Downloads tree and Next is far too interested in them.
-  outputFileTracingRoot: resolve(here, '../..'),
-  // The engine is local TypeScript, not a published npm package. Tell Next to compile it.
-  transpilePackages: ['@stocktruth/engine'],
   // pg opens real sockets; it must not be bundled into the server build.
   serverExternalPackages: ['pg'],
   webpack(config) {

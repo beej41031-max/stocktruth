@@ -95,7 +95,7 @@ export interface EvidenceSource {
   /** Site policy. Defaults are used when a host has no opinion. */
   loadPolicy(site: SiteRef): Promise<Partial<ReconciliationPolicy>>;
 
-  /** True when the adapter can filter inventory evidence by knowledge time. */
+  /** True when this adapter can answer historical questions honestly. */
   readonly supportsKnownAt: boolean;
 
   /** Shown in run records so an answer can be traced to where it came from. */

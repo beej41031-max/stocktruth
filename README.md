@@ -1,174 +1,161 @@
 # StockTruth
 
-**Your stock system tells you how many you've got. StockTruth tells you whether you should believe it.**
+**Know what stock you have. Know why you believe it.**
 
-StockTruth is a small inventory integrity layer. It sits beside an existing stock system, reads the evidence underneath the headline quantity, and decides what can actually be defended.
+A stock verification system for businesses that already have records and do not
+fully trust them. Not an ERP, and not an inventory spreadsheet with a nicer
+dashboard.
 
-It is not another ERP. Nobody needs that sort of excitement.
+One rule, everywhere: **never turn incomplete evidence into false certainty.**
+When the system cannot justify a number it says so, says why, names the records
+involved, and says what would settle it.
 
-If the evidence supports one answer, StockTruth states it. If it does not, the quantity is withheld, the conflicting records are named, and the operator gets a practical way to settle it.
+---
 
-## The awkward example
+## The case it was built for
 
-A book export says there are **19,200** cans.
+```
+Can 440ml unprinted                                          PKG-CAN-440
 
-A person physically counts **27,600** at 12:02.
+  Book says            19,200     as at 22 Aug
+  Somebody counted     27,600     14 Sep, 12:02, packaging bay
+  On the shelf now     cannot be stated
 
-Later that afternoon a delivery record arrives for **8,400** cans. The goods physically arrived at 11:02, before the count, but the paperwork was not entered until after it.
+  Why:
+    M000004, 8400 each, arrived 2026-09-14T11:02Z but was not recorded
+    until 4 hours later. Count C000005 was taken at 12:02Z, in between.
+    So that delivery may or may not have been on the shelf when the
+    counter looked, and applying it would double-count while ignoring it
+    would undercount.
 
-Did the counter include that pallet?
-
-The records do not say.
-
-Adding 8,400 may double-count it. Ignoring 8,400 may miss it. So StockTruth does neither:
-
-```text
-Book says          19,200
-Counted             27,600
-On the shelf now    CANNOT BE STATED
-
-Why
-Delivery M000004 arrived before count C000005 but was recorded afterwards.
-The data cannot tell whether it was already included in the physical count.
-
-Clear it by
-Confirm whether the delivery was present during the count, or count the item again.
+    Ask whoever received the delivery or whoever counted, and record the
+    answer as a correcting movement. Or count PKG-CAN-440 again now,
+    which settles it without anyone having to remember.
 ```
 
-The useful bit is the refusal. Printing a number is easy.
+Most inventory software prints 36,000 here and is confidently wrong by 8,400.
 
-## Two timelines
+## Knowledge can go backwards
 
-Stock records have two different clocks:
+Ask the same item what was known before that delivery note arrived:
 
-- **when something happened** — goods arrived, stock was counted, an issue occurred
-- **when the system learned about it** — a file was imported, somebody keyed the delivery, an API event landed
-
-StockTruth keeps those separate.
-
-That means the same item can honestly have been:
-
-```text
-15:01   PROVISIONAL   27,600
-15:02   INCOMPLETE    cannot be stated
+```
+As known at 2026-09-14T15:01Z    PROVISIONAL       27,600
+As known now                     cannot be stated
 ```
 
-Nothing mystical happened to the stock at 15:02. New evidence arrived and showed that the earlier answer was less certain than it looked.
+At 15:01 the count stood on its own and 27,600 was defensible. At 15:02 a
+delivery note arrived that could not be placed relative to the count, and the
+number had to be withdrawn.
 
-Historical inventory evidence can be queried by knowledge time. Current source-feed health is deliberately not pushed backwards into historical answers because this demo schema does not keep a full history of feed-status changes. Better a stated limit than a fake time machine.
+More evidence does not always mean more certainty. Sometimes it reveals an
+ambiguity that was there all along and nobody could see. A system that only
+ever gets more confident is not modelling knowledge, it is modelling optimism.
 
-## How it plugs into a real system
+---
 
-The engine does not know about Supabase, table names, Shopify, an ERP, somebody's heroic spreadsheet, or anything else upstream.
+## Shape
 
-```text
-existing stock system
-        |
-        v
-     adapter
-        |
-        v
- StockTruth engine
-        |
-        +--> quantity or refusal
-        +--> state
-        +--> reasons
-        +--> evidence used
-        +--> what would clear the problem
+```
+packages/engine/       the reasoning. No database, no schema, no dependencies
+apps/web/              Next.js on Vercel, Supabase Postgres
+  lib/adapters/        the Postgres adapter, one implementation of the port
+supabase/migrations/   schema, one concern per file, append-only
+docs/decisions/        why the awkward choices are the way they are
 ```
 
-An adapter translates the customer's records into a few plain evidence shapes: items, book snapshots, physical counts, movements and source health.
+The engine is a package. It takes plain evidence shapes and returns a
+conclusion. Hosts implement `EvidenceSource` from `packages/engine/src/ports.ts`,
+so a different company's inventory system can be fed through an adapter without
+touching any of the reasoning.
 
-That keeps the bespoke work at the edge. A different customer gets a different adapter; the reconciliation rules stay put.
+That separation is enforced rather than intended: a test reads every file in the
+engine and fails if one imports anything outside the package or mentions a
+host's vocabulary in executable code. A second adapter made entirely of arrays
+drives the engine through all six states with no database involved, which is the
+cleanest proof the boundary is real.
 
-`packages/engine` has no database dependency. The Postgres adapter lives in `apps/web/lib/adapters/postgres.ts`, and the test suite also drives the same engine with an in-memory adapter made from arrays.
+## The stress test
 
-## What it refuses to guess
+`npm run stress -- --items=10000 --movements=8` generates a seeded adversarial
+warehouse, loads it through the real Postgres adapter, reconciles every scope
+with the real engine, and checks the refusal invariant on each one. Last real
+run: 18,562 scopes, 74,801 evidence rows, **zero invariant failures**,
+43,969 scopes per second. `/stress` renders the committed result.
 
-A few rules are deliberately boring:
+The 53 unit tests isolate one defect each. This throws every defect class the
+engine knows about at once, in combinations nobody chose, at a scale nobody is
+going to hand-check.
 
-- `0` is a real count. It is not blank and it is not missing.
-- Unknown is not zero.
-- A physical count is evidence; a book quantity is a claim from another system.
-- A unit mismatch is not quietly converted without an agreed conversion rule.
-- Duplicate-looking movements are not silently merged.
-- Fuzzy item matches may raise a question but never attach stock automatically.
-- Corrections and reversals keep the original record visible.
-- The expected quantity is withheld during a blind count.
-- A blocking reason means no derived quantity. No exceptions hidden in the UI.
-
-## States
-
-| State | Meaning |
-|---|---|
-| `VERIFIED` | The available evidence supports a current position. |
-| `PROVISIONAL` | A position can be derived, but there is a non-blocking caveat. |
-| `STALE` | The last physical evidence is too old for policy. |
-| `INCOMPLETE` | Something needed to produce one defensible answer is missing. |
-| `CONFLICT` | The evidence contradicts itself or the item's identity is unsafe. |
-| `UNVERIFIED` | Nobody has physically counted it yet. |
-
-Stock status and evidence quality are separate ideas. A green-looking dashboard should not be able to turn missing evidence into confidence by CSS.
-
-## Repository
-
-```text
-packages/engine/       database-free reconciliation engine
-apps/web/              Next.js demo app
-apps/web/lib/adapters/ Postgres implementation of the engine port
-supabase/migrations/   schema and RLS
-supabase/seed.sql      invented brewery data with deliberate faults
-docs/decisions/        short notes on the decisions that are easy to get wrong
-```
-
-The seed company, **Northgate Brewing Co.**, is entirely fictional. The bad data is intentional.
-
-## Run it
-
-Requirements: Node.js 22+ and a blank Supabase project.
+## Running it
 
 ```bash
 npm install
-npm test
-npm run typecheck
-```
 
-Apply the SQL migrations in order, then `supabase/seed.sql`.
+# schema, then demo data
+for f in supabase/migrations/*.sql; do psql "$DATABASE_URL" -f "$f"; done
+psql "$DATABASE_URL" -f supabase/seed.sql
 
-Copy `apps/web/.env.example` to `apps/web/.env.local`, then set:
-
-```text
-DATABASE_URL=...
-DEMO_USER_ID=11111111-1111-4111-8111-000000000001
-```
-
-For local development, copy the **Session pooler** URI from Supabase. For Vercel, use the **Transaction pooler** URI and add `sslmode=require`. Do not invent the pooler hostname; copy the whole URI from Supabase's Connect panel.
-
-Then:
-
-```bash
+npm test                                       # 53 engine tests
+cd apps/web
+npx tsx scripts/reconcile.ts                   # run the engine over a site
+npx tsx scripts/explain.ts PKG-CAN-440         # prove a refusal from the records
 npm run dev
 ```
 
-The useful CLI checks are:
+`DATABASE_URL` is required. `DEMO_USER_ID` stands in for auth locally.
 
-```bash
-npm run reconcile
-npm run explain -- PKG-CAN-440
-```
+## The engine
 
-`explain.ts` shows the late-delivery example from the actual database records, including the answer a minute before the late evidence arrived.
+Six states:
 
-## Tests
+| | |
+|---|---|
+| `VERIFIED` | evidence supports a current position |
+| `PROVISIONAL` | derivable, with something non-critical noted |
+| `STALE` | the count is older than policy allows |
+| `INCOMPLETE` | required evidence missing, no position claimed |
+| `CONFLICT` | evidence contradicts itself |
+| `UNVERIFIED` | never physically counted |
 
-There are 53 engine tests covering the boring cases that usually become expensive later: zero counts, stale evidence, late-arriving movements, duplicate suspicion, reversals, corrections, unit conflicts, historical knowledge queries, deterministic explanations and the rule that every refusal must have a blocking reason.
+Two numbers, separately answerable and both nullable:
 
-The engine package also has an isolation test which fails if executable engine code starts importing host/database concerns.
+- **derived quantity** — what is on the shelf now, anchored on the count
+- **variance at count** — how wrong the records were when somebody last looked,
+  computed only when the book can be carried forward without assuming anything
 
-## Deliberate limits in v0.1.1
+A position is refused **if and only if** a blocking reason is present.
+`explain()` asserts that in both directions on every call and throws if it ever
+stops holding, so the rule cannot rot quietly.
 
-This is a portfolio/demo build, not a finished inventory product.
+## Things it deliberately does not do
 
-It does not yet include real Supabase Auth, offline counts, photo evidence, a staged import UI, multi-site operations or billing. Catalogue/configuration edits are not fully versioned historically. Source-feed freshness is therefore evaluated only for current reconciliation, not historical knowledge queries.
+It does not convert units. A book figure in litres against an item held in
+drums is refused, because guessing that a case is twenty-four is how a wrong
+number gets an authoritative-looking source.
 
-Those are missing features. They are not silently pretended to exist.
+It does not merge duplicate movements. Two identical receipts minutes apart are
+usually one delivery keyed twice and occasionally two real deliveries. Merging
+the second case loses stock silently, so both are kept and a person is asked.
+
+It does not link movements on a fuzzy code match. Close codes raise a question;
+nothing is attached automatically.
+
+It does not show the expected quantity before a count is entered. A count that
+was shown the answer is agreement, not evidence. Withheld at the server, not
+hidden in the UI.
+
+It does not call a difference a discrepancy. At the rack nobody knows whether a
+gap is shrinkage, a late delivery or a bad book figure.
+
+It does not delete. Corrections supersede, movements are reversed by linked
+movements, and the audit table refuses updates and deletes at the database.
+
+## Status
+
+V0.1. Schema, engine, adapter port, reconciliation, blind counting, six screens,
+audit trail, bitemporal reconstruction.
+
+Not built: the staged CSV import UI (`import_runs` and `import_rows` exist and
+are seeded, the screens do not), offline counting, photo evidence, multi-site,
+billing.

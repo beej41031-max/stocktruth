@@ -9,13 +9,10 @@
  * be stated" is a hand-written warning rather than a conclusion, and the whole
  * design is decoration.
  */
-import { existsSync } from 'node:fs';
 import { Pool } from 'pg';
 import { DEFAULT_POLICY, explain, asOfKnowledge } from '@stocktruth/engine';
 import { PostgresEvidenceSource } from '../lib/adapters/postgres';
 
-
-if (existsSync('.env.local')) process.loadEnvFile('.env.local');
 const sku = process.argv[2] ?? 'PKG-CAN-440';
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 

@@ -4,44 +4,82 @@ import { listSites } from '@/lib/queries/read';
 
 export const dynamic = 'force-dynamic';
 
-const fmt = (iso: string) => new Date(iso).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-export default async function Audit() {
-  const userId = await currentUserId();
-  const events = await withUser(userId, async (db) => {
-    const site = (await listSites(db))[0];
-    if (!site) return [];
-    return db.query<{
-      id: string; created_at: string; event_type: string; object_type: string; actor_type: string; actor_label: string | null; detail: Record<string, unknown>;
-    }>(`select ae.id, ae.created_at, ae.event_type, ae.object_type, ae.actor_type, ae.actor_label, ae.detail
-          from audit_events ae
-         where ae.site_id = $1 order by ae.created_at desc limit 250`, [site.id]);
+const fmt = (iso: string) =>
+  new Date(iso).toLocaleString('en-GB', {
+    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
   });
 
-  const engine = events.filter((e) => e.actor_type === 'engine').length;
-  const people = events.length - engine;
-  const types = new Set(events.map((e) => e.event_type)).size;
+/**
+ * The audit trail, for a manager rather than for a DBA.
+ *
+ * Exists because "we keep an audit log" is worth nothing if reading it means
+ * writing SQL. If a person cannot answer "who changed this and when" from a
+ * screen, the log is storage, not accountability.
+ */
+export default async function Audit() {
+  const userId = await currentUserId();
+
+  const events = await withUser(userId, async (db) => {
+    const sites = await listSites(db);
+    const site = sites[0];
+    if (!site) return [];
+    return db.query<{
+      id: string;
+      created_at: string;
+      event_type: string;
+      object_type: string;
+      actor_type: string;
+      actor_label: string | null;
+      detail: Record<string, unknown>;
+    }>(
+      `select ae.id, ae.created_at, ae.event_type, ae.object_type,
+              ae.actor_type, ae.actor_label, ae.detail
+         from audit_events ae
+        where ae.site_id = $1
+        order by ae.created_at desc
+        limit 200`,
+      [site.id],
+    );
+  });
 
   return (
     <>
-      <section className="page-intro slim-intro"><div><div className="kicker">Black-box recorder</div><h1>Nothing quietly disappears.<br /><span>The history is part of the product.</span></h1><p className="lede">Counts, reconciliations and human resolutions are recorded as events. This screen is for answering Ã¢â‚¬Å“what changed, who did it, and when?Ã¢â‚¬Â without writing SQL.</p></div><div className="intro-meta"><div><span>Events</span><strong>{events.length}</strong></div><div><span>Engine</span><strong>{engine}</strong></div><div><span>Human</span><strong>{people}</strong></div></div></section>
+      <h1>Audit</h1>
+      <p className="sub">
+        Everything that changed, who changed it and when. Append-only: the database refuses
+        updates and deletes on this table, so what is here is what happened.
+      </p>
 
-      <div className="audit-header"><span>{types} event types in the current view</span><span>Newest first / append-only source</span></div>
-      {events.length === 0 ? <div className="empty-state"><span>NO EVENTS</span><h2>The recorder is empty.</h2></div> : (
-        <div className="audit-stream">
-          {events.map((e) => {
-            const detail = Object.entries(e.detail ?? {}).filter(([, v]) => v !== null && typeof v !== 'object');
-            return <article className="audit-event" key={e.id}>
-              <div className="audit-time"><strong>{fmt(e.created_at)}</strong><span>{e.actor_type}</span></div>
-              <div className={`audit-mark actor-${e.actor_type}`}><span /></div>
-              <div className="audit-body">
-                <div className="audit-title"><strong>{e.event_type.replaceAll('_', ' ').toLowerCase()}</strong><span>{e.object_type}</span></div>
-                <p>{e.actor_label ?? (e.actor_type === 'user' ? 'Signed-in user' : e.actor_type)}</p>
-                {detail.length > 0 && <details><summary>Event detail</summary><dl>{detail.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{String(v)}</dd></div>)}</dl></details>}
-              </div>
-            </article>;
-          })}
-        </div>
+      {events.length === 0 ? (
+        <p className="empty">Nothing recorded yet.</p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>What</th>
+              <th>Who</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            {events.map((e) => (
+              <tr key={e.id}>
+                <td className="dim">{fmt(e.created_at)}</td>
+                <td>{e.event_type.toLowerCase().replace(/_/g, ' ')}</td>
+                <td className="dim">
+                  {e.actor_label ?? (e.actor_type === 'user' ? 'Signed-in user' : e.actor_type)}
+                </td>
+                <td className="dim">
+                  {Object.entries(e.detail ?? {})
+                    .filter(([, v]) => v !== null && typeof v !== 'object')
+                    .map(([k, v]) => `${k}: ${v}`)
+                    .join(' Â· ')}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </>
   );

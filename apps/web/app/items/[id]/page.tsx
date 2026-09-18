@@ -1,27 +1,41 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { withUser, rawPool } from '@/lib/db';
+import { withUser } from '@/lib/db';
 import { currentUserId } from '@/lib/session';
 import { listSites, itemDetail, itemTimeline, latestResult } from '@/lib/queries/read';
 import { DEFAULT_POLICY, REASONS, explain, type ReasonDefinition } from '@stocktruth/engine';
 import { PostgresEvidenceSource } from '@/lib/adapters/postgres';
-import Status from '../../components/Status';
+import { rawPool } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-const fmtTime = (iso: string) => new Date(iso).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+const fmtTime = (iso: string) =>
+  new Date(iso).toLocaleString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
-function lagMinutes(occurred: string, recorded: string | null): number | null {
+const fmtDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+/** Gap between a thing happening and somebody writing it down. */
+function lag(occurred: string, recorded: string | null): string | null {
   if (!recorded) return null;
-  return Math.round((new Date(recorded).getTime() - new Date(occurred).getTime()) / 60_000);
+  const mins = Math.round((new Date(recorded).getTime() - new Date(occurred).getTime()) / 60_000);
+  if (Math.abs(mins) < 15) return null;
+  if (Math.abs(mins) < 120) return `Recorded ${mins} minutes later`;
+  return `Recorded ${Math.round(mins / 60)} hours later`;
 }
 
 export default async function ItemPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const userId = await currentUserId();
+
   const data = await withUser(userId, async (db) => {
-    const site = (await listSites(db))[0];
+    const sites = await listSites(db);
+    const site = sites[0];
     if (!site) return null;
     const item = await itemDetail(db, id);
     if (!item) return null;
@@ -33,101 +47,205 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
   if (!data) notFound();
   const { site, item, result, timeline } = data;
 
+  // Re-run the engine for this one item so the page can show what would clear
+  // each blocker, naming the actual records. The stored result carries the
+  // codes; only the engine can turn them into an instruction.
   const source = new PostgresEvidenceSource(rawPool());
   const policy = { ...DEFAULT_POLICY, ...(await source.loadPolicy({ siteId: site.id })) };
-  const scope = (await source.loadSite({ siteId: site.id })).find((s) => s.item.id === id);
-  const detail = scope ? explain({
-    item: scope.item,
-    locationId: scope.locationId,
-    book: scope.book,
-    count: scope.count,
-    movements: scope.movements,
-    unlinkedMovementCount: scope.unlinkedMovementCount,
-    possiblyRelatedUnlinkedCount: scope.possiblyRelatedUnlinkedCount,
-    sources: scope.sources,
-    policy,
-    evaluatedAt: new Date(),
-  }) : null;
+  const scopes = await source.loadSite({ siteId: site.id });
+  const scope = scopes.find((s) => s.item.id === id);
+  const detail = scope
+    ? explain({
+        item: scope.item,
+        locationId: scope.locationId,
+        book: scope.book,
+        count: scope.count,
+        movements: scope.movements,
+        unlinkedMovementCount: scope.unlinkedMovementCount,
+        possiblyRelatedUnlinkedCount: scope.possiblyRelatedUnlinkedCount,
+        sources: scope.sources,
+        policy,
+        evaluatedAt: new Date(),
+      })
+    : null;
 
   const codes = result?.reasonCodes ?? [];
-  const blocking = codes.filter((c) => (REASONS as Record<string, ReasonDefinition>)[c]?.blocks === true);
-  const caveats = codes.filter((c) => !(REASONS as Record<string, ReasonDefinition>)[c]?.blocks);
-  const stateable = result?.derivedQuantity != null;
+  const isBlocking = (c: string) =>
+    (REASONS as Record<string, ReasonDefinition>)[c]?.blocks === true;
+  const blocking = codes.filter(isBlocking);
+  const caveats = codes.filter((c) => !isBlocking(c));
 
   return (
     <>
-      <div className="breadcrumbs"><Link href="/items">Items</Link><span>/</span><span>{item.sku ?? item.name}</span></div>
-      <section className="item-hero">
-        <div>
-          <div className="kicker">Evidence file / {result?.locationCode ?? 'no location'}</div>
-          <h1>{item.name}</h1>
-          <div className="item-identity"><span className="code">{item.sku ?? '(no code)'}</span><span>{item.stockUnit}</span>{item.aliases.length > 0 && <span>{item.aliases.join(' / ')}</span>}{!item.active && <span>retired</span>}</div>
+      <p className="sub" style={{ marginBottom: 6 }}>
+        <Link href="/items">Items</Link>
+      </p>
+      <h1>{item.name}</h1>
+      <p className="sub">
+        <span className="code">{item.sku}</span> · held in {item.stockUnit}
+        {item.aliases.length > 0 && <> · also called {item.aliases.join(', ')}</>}
+        {!item.active && <> · retired</>}
+      </p>
+
+      {item.blocked && (
+        <div className="reason high">
+          <div className="what">This code is blocked and cannot be counted</div>
+          <div className="do">{item.blockedReason}</div>
         </div>
-        <div className="item-verdict">
-          <Status state={result?.state} />
-          <span className="eyebrow">Current stock</span>
-          <strong className={stateable ? `st-${result?.state}` : 'danger-text'}>{stateable ? result?.derivedQuantity : 'NOT STATED'}</strong>
-          <small>{stateable ? `as of ${result?.derivedAsOf ? fmtTime(result.derivedAsOf) : 'latest evidence'}` : 'The evidence does not support one answer.'}</small>
-        </div>
-      </section>
-
-      {item.blocked && <div className="critical-banner"><span>CATALOGUE BLOCK</span><strong>This code is unsafe to count against.</strong><p>{item.blockedReason}</p></div>}
-
-      <section className="position-equation section-block">
-        <div className="equation-cell"><span>BOOK</span><strong>{result?.bookQuantity ?? '—'}</strong><small>{result?.bookAsOf ? `as at ${fmtDate(result.bookAsOf)}` : 'no dated book position'}</small></div>
-        <div className="equation-symbol">→</div>
-        <div className="equation-cell"><span>PHYSICAL</span><strong>{result?.physicalQuantity ?? '—'}</strong><small>{result?.physicalCountedAt ? fmtTime(result.physicalCountedAt) : 'never counted'}</small></div>
-        <div className="equation-symbol">+</div>
-        <div className="equation-cell"><span>MOVEMENTS SINCE</span><strong>{result?.movementNet != null ? `${Number(result.movementNet) > 0 ? '+' : ''}${result.movementNet}` : '?'}</strong><small>after the count anchor</small></div>
-        <div className="equation-symbol">=</div>
-        <div className={`equation-cell equation-final ${stateable ? '' : 'equation-refused'}`}><span>DEFENSIBLE NOW</span><strong>{result?.derivedQuantity ?? 'NOT STATED'}</strong><small>{stateable ? 'supported by the evidence above' : 'uncertainty survives the arithmetic'}</small></div>
-      </section>
-
-      {result?.varianceAtCount != null && <div className="editorial-note"><strong>At count time, book and shelf differed by {Math.abs(Number(result.varianceAtCount)).toLocaleString('en-GB')} {item.stockUnit}.</strong><span>That is a difference, not automatically shrinkage. StockTruth keeps the observation separate from the explanation.</span></div>}
-
-      {(blocking.length > 0 || caveats.length > 0) && (
-        <section className="section-block reason-section">
-          <div className="section-heading"><div><span className="eyebrow">Verdict anatomy</span><h2>Why the engine landed here</h2></div></div>
-          <div className="reason-grid">
-            {blocking.map((code) => {
-              const def = (REASONS as Record<string, ReasonDefinition>)[code];
-              const blocker = detail?.blockers.find((b) => b.code === code);
-              if (!def) return null;
-              return <div className="reason-card blocking-card" key={code}><span>BLOCKING</span><strong>{def.short}</strong><p>{blocker?.resolution ?? def.action}</p><code>{code}</code></div>;
-            })}
-            {caveats.map((code) => {
-              const def = (REASONS as Record<string, ReasonDefinition>)[code];
-              if (!def) return null;
-              return <div className="reason-card caveat-card" key={code}><span>CAVEAT</span><strong>{def.short}</strong><p>{def.action}</p><code>{code}</code></div>;
-            })}
-          </div>
-          {detail?.ifCleared?.quantity != null && <div className="counterfactual"><span className="eyebrow">If the blocker were cleared</span><strong>{detail.ifCleared.quantity.toLocaleString('en-GB')}</strong><p>This is a counterfactual, not a recorded stock position.{detail.ifCleared.assuming.length ? ` It assumes ${detail.ifCleared.assuming.join('; ')}.` : ''}</p></div>}
-        </section>
       )}
 
-      <section className="section-block">
-        <div className="section-heading"><div><span className="eyebrow">Evidence chronology</span><h2>What happened, and when it was written down</h2></div><span className="section-note">Occurred time and recorded time stay separate.</span></div>
-        {timeline.length === 0 ? <div className="empty-inline">Nothing recorded against this item.</div> : (
-          <div className="forensic-timeline">
-            {timeline.map((e, i) => {
-              const lag = lagMinutes(e.at, e.recordedAt);
-              const late = lag != null && Math.abs(lag) >= 15;
-              return <article className={`forensic-event event-${e.kind} ${late ? 'event-late' : ''}`} key={`${e.at}-${i}`}>
-                <div className="event-axis"><span className={`event-shape ${e.kind}`} /></div>
-                <div className="event-time"><strong>{fmtTime(e.at)}</strong><span>occurred</span></div>
-                <div className="event-body"><div className="event-title"><strong>{e.label}</strong><span>{e.quantity}</span></div>{e.detail && <p>{e.detail}</p>}{e.actor && <small>Source: {e.actor}</small>}
-                  {late && <div className="late-record"><span>RECORDED LATER</span><strong>{e.recordedAt ? fmtTime(e.recordedAt) : 'unknown'}</strong><small>{Math.abs(lag!)} minutes after the event time</small></div>}
-                </div>
-              </article>;
-            })}
-          </div>
-        )}
-      </section>
+      {/*
+        Three numbers that answer three different questions. Keeping them side
+        by side is the whole argument of the product: a single "quantity" field
+        would have to pick one and hide the other two.
+      */}
+      <div className="truth">
+        <div>
+          <div className="label">Book says</div>
+          {result?.bookQuantity != null ? (
+            <>
+              <div className="value">{result.bookQuantity}</div>
+              <div className="when">
+                {result.bookAsOf ? `As at ${fmtDate(result.bookAsOf)}` : 'No as-at date in the source'}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="value refused none">No book position</div>
+              <div className="when">Nothing has been imported for this item.</div>
+            </>
+          )}
+        </div>
 
-      <details className="raw-drawer">
-        <summary>Raw evidence summary <span>for auditors and curious people</span></summary>
-        <div className="raw-grid"><div><span>Aliases</span><strong>{item.aliases.length ? item.aliases.join(', ') : 'none'}</strong></div><div><span>Barcodes</span><strong>{item.barcodes.length ? item.barcodes.join(', ') : 'none'}</strong></div><div><span>Reason codes</span><strong>{codes.length ? codes.join(', ') : 'none'}</strong></div><div><span>Timeline rows</span><strong>{timeline.length}</strong></div></div>
-      </details>
+        <div>
+          <div className="label">Somebody counted</div>
+          {result?.physicalQuantity != null ? (
+            <>
+              <div className="value">{result.physicalQuantity}</div>
+              <div className="when">
+                {result.physicalCountedAt && fmtTime(result.physicalCountedAt)}
+                {result.locationCode && ` · ${result.locationCode}`}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="value refused none">Never counted</div>
+              <div className="when">Nobody has physically checked this.</div>
+            </>
+          )}
+        </div>
+
+        <div>
+          <div className="label">On the shelf now</div>
+          {result?.derivedQuantity != null ? (
+            <>
+              <div className={`value st-${result.state}`}>{result.derivedQuantity}</div>
+              <div className="when">
+                Counted {result.physicalQuantity}
+                {result.movementNet != null && Number(result.movementNet) !== 0 && (
+                  <>
+                    , then {Number(result.movementNet) > 0 ? '+' : ''}
+                    {result.movementNet} since
+                  </>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="value refused none">Cannot be stated</div>
+              <div className="when">
+                The evidence does not support one answer. The reasons are below.
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {result?.varianceAtCount != null && (
+        <p className="sub">
+          When it was counted, the records were {Math.abs(Number(result.varianceAtCount))}{' '}
+          {Number(result.varianceAtCount) > 0 ? 'lower' : 'higher'} than what was on the shelf.
+        </p>
+      )}
+
+      {result && result.reasonCodes.length > 0 && (
+        <>
+          {/*
+            Blocking reasons first, and labelled as blocking. The difference
+            between "this is why there is no number" and "this is worth knowing"
+            is the difference between work and noise, and the person reading
+            should not have to infer which is which.
+          */}
+          {blocking.length > 0 && <h2>Why there is no number</h2>}
+          {blocking.map((code) => {
+            const def = (REASONS as Record<string, ReasonDefinition>)[code];
+            if (!def) return null;
+            const blocker = detail?.blockers.find((b) => b.code === code);
+            return (
+              <div className={`reason ${def.severity}`} key={code}>
+                <div className="what">{def.short}</div>
+                {/* Naming the actual records is the difference between telling
+                    somebody there is a problem and telling them what to do. */}
+                <div className="do">{blocker?.resolution ?? def.action}</div>
+              </div>
+            );
+          })}
+
+          {detail?.ifCleared?.quantity != null && (
+            <div className="banner">
+              If that were settled the position would be{' '}
+              <strong>{detail.ifCleared.quantity.toLocaleString('en-GB')}</strong>
+              {detail.ifCleared.assuming.length > 0 && (
+                <>
+                  , assuming {detail.ifCleared.assuming.join('; and ')}. That assumption has not
+                  been made and the figure is not recorded anywhere.
+                </>
+              )}
+            </div>
+          )}
+
+          {caveats.length > 0 && <h2>Worth knowing</h2>}
+          {caveats.map((code) => {
+            const def = (REASONS as Record<string, ReasonDefinition>)[code];
+            if (!def) return null;
+            return (
+              <div className={`reason ${def.severity}`} key={code}>
+                <div className="what">{def.short}</div>
+                <div className="do">{def.action}</div>
+              </div>
+            );
+          })}
+        </>
+      )}
+
+      <h2>Everything that happened</h2>
+      {timeline.length === 0 ? (
+        <p className="empty">Nothing recorded against this item yet.</p>
+      ) : (
+        <div className="timeline">
+          {timeline.map((e, i) => {
+            const delay = e.kind === 'movement' ? lag(e.at, e.recordedAt) : null;
+            return (
+              <div className={`entry ${e.kind}`} key={i}>
+                <div className="top">
+                  <span className="when">{fmtTime(e.at)}</span>
+                  <span className="what">{e.label}</span>
+                  <span className="qty">{e.quantity}</span>
+                </div>
+                {e.detail && <div className="note">{e.detail}</div>}
+                {e.actor && <div className="note">{e.actor}</div>}
+                {/*
+                  The awkward chronology is the point. A delivery that arrived
+                  before a count but was keyed in afterwards is exactly what
+                  stops a number being stateable, so it is shown rather than
+                  smoothed over.
+                */}
+                {delay && <div className="lag">{delay}</div>}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </>
   );
 }

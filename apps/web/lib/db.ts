@@ -30,11 +30,10 @@ function pool(): Pool {
     if (!connectionString) throw new Error('DATABASE_URL is not set');
     globalThis.__stocktruthPool = new Pool({
       connectionString,
-      max: 1,
+      max: 10,
       idleTimeoutMillis: 30_000,
-      // One connection per warm serverless instance is plenty here. The app
-      // deliberately runs each page's reads in sequence inside one transaction.
-      // Ten connections per instance would only make the pooler sad.
+      // Supabase's pooler terminates idle sessions; failing fast is better than
+      // a page hanging on a dead socket.
       connectionTimeoutMillis: 10_000,
     });
   }

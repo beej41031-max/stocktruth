@@ -1,40 +1,99 @@
+import Link from 'next/link';
 import { withUser } from '@/lib/db';
 import { currentUserId } from '@/lib/session';
 import { listSites, openIssues } from '@/lib/queries/read';
 import { REASONS, type ReasonDefinition } from '@stocktruth/engine';
-import IssuesClient from './IssuesClient';
+import ResolveForm from './ResolveForm';
 
 export const dynamic = 'force-dynamic';
 
-export default async function IssuesPage({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
-  const { code } = await searchParams;
+const fmt = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+
+export default async function Reconcile() {
   const userId = await currentUserId();
-  const rows = await withUser(userId, async (db) => {
-    const site = (await listSites(db))[0];
+  const issues = await withUser(userId, async (db) => {
+    const sites = await listSites(db);
+    const site = sites[0];
     if (!site) return [];
-    return openIssues(db, site.id, 300);
+    return openIssues(db, site.id, 200);
   });
 
-  const issues = rows.map((issue) => {
-    const def = (REASONS as Record<string, ReasonDefinition>)[issue.code];
-    return {
-      ...issue,
-      short: def?.short ?? issue.code,
-      action: def?.action ?? 'Inspect the underlying evidence.',
-      blocks: def?.blocks === true,
-    };
-  });
+  const high = issues.filter((i) => i.severity === 'high');
+  const rest = issues.filter((i) => i.severity !== 'high');
 
   return (
     <>
-      <section className="page-intro slim-intro">
-        <div>
-          <div className="kicker">Exception console</div>
-          <h1>Issues are work.<br /><span>Warnings are context.</span></h1>
-          <p className="lede">The engine does not “fix” evidence. It names the problem, withholds a number when necessary, and leaves a human-readable trail of what would settle it.</p>
-        </div>
-      </section>
-      {issues.length ? <IssuesClient issues={issues} initialCode={code} /> : <div className="empty-state"><span>QUEUE CLEAR</span><h2>Nothing is asking for attention.</h2><p>Either everything reconciles or the engine has not run since the latest evidence arrived.</p></div>}
+      <h1>Reconcile</h1>
+      <p className="sub">
+        Everything the engine could not settle on its own, and what it would take to settle it.
+        Nothing here is fixed automatically, because every one of these needs somebody who was
+        in the building to say what actually happened.
+      </p>
+
+      {issues.length === 0 && (
+        <p className="empty">
+          Nothing outstanding. Either every position reconciles, or the engine has not run since
+          the last import.
+        </p>
+      )}
+
+      {high.length > 0 && <h2>Blocking a number ({high.length})</h2>}
+      <Queue issues={high} />
+
+      {rest.length > 0 && <h2>Worth knowing ({rest.length})</h2>}
+      <Queue issues={rest} />
     </>
+  );
+}
+
+function Queue({ issues }: { issues: Awaited<ReturnType<typeof openIssues>> }) {
+  if (issues.length === 0) return null;
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>What is wrong</th>
+          <th className="num">Book</th>
+          <th className="num">Counted</th>
+          <th className="num">Now</th>
+          <th>Since</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {issues.map((issue) => {
+          const def = (REASONS as Record<string, ReasonDefinition>)[issue.code];
+          return (
+            <tr key={issue.id}>
+              <td>
+                {issue.itemId ? (
+                  <Link href={`/items/${issue.itemId}`} className="code">
+                    {issue.sku ?? issue.itemName}
+                  </Link>
+                ) : (
+                  <span className="dim">site-wide</span>
+                )}
+                <div className="dim">{issue.locationCode ?? ''}</div>
+              </td>
+              <td>
+                <div>{def?.short ?? issue.code}</div>
+                <div className="dim">{def?.action}</div>
+              </td>
+              <td className="num">{issue.bookQuantity ?? '—'}</td>
+              <td className="num">{issue.physicalQuantity ?? '—'}</td>
+              <td className="num">
+                {issue.derivedQuantity ?? <span className="none">not stated</span>}
+              </td>
+              <td className="dim">{fmt(issue.firstSeenAt)}</td>
+              <td>
+                <ResolveForm issueId={issue.id} />
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }

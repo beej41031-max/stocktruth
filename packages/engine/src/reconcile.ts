@@ -8,7 +8,7 @@ import {
 } from './types';
 import { type ReasonCode } from './reasons';
 
-export const ENGINE_VERSION = '0.1.1';
+export const ENGINE_VERSION = '0.1.0';
 
 const MS_PER_DAY = 86_400_000;
 const MS_PER_MIN = 60_000;

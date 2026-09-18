@@ -53,13 +53,13 @@ insert into public.locations (id, site_id, code, name) values
 -- Sources
 -- ---------------------------------------------------------------------------
 
-insert into public.source_systems (id, organisation_id, name, source_type, expected_sync_minutes, last_success_at, created_at) values
+insert into public.source_systems (id, organisation_id, name, source_type, expected_sync_minutes, last_success_at) values
   -- Runs hourly. Has not run for four days, which is the point.
   ('d0000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000001',
-   'Warehouse export', 'google_sheets', 60, now() - interval '4 days', now() - interval '120 days'),
+   'Warehouse export', 'google_sheets', 60, now() - interval '4 days'),
   -- Manual. Silence means nothing.
   ('d0000000-0000-4000-8000-000000000002', 'a0000000-0000-4000-8000-000000000001',
-   'Monthly stock spreadsheet', 'csv_upload', null, now() - interval '19 days', now() - interval '120 days');
+   'Monthly stock spreadsheet', 'csv_upload', null, now() - interval '19 days');
 
 -- ---------------------------------------------------------------------------
 -- Catalogue
@@ -106,19 +106,19 @@ insert into public.items (id, organisation_id, sku, name, stock_unit, active, bl
   ('e0000000-0000-4000-8000-000000000024', 'a0000000-0000-4000-8000-000000000001', 'MLT-RYE-25',   'Rye malt 25kg',              'sack', true, false, null, now() - interval '120 days');
 
 -- Two products, one barcode. The scanner has to ask rather than pick.
-insert into public.item_barcodes (item_id, barcode, created_at) values
-  ('e0000000-0000-4000-8000-000000000011', '5012345000114', now() - interval '120 days'),
-  ('e0000000-0000-4000-8000-000000000012', '5012345000121', now() - interval '120 days'),
-  ('e0000000-0000-4000-8000-000000000015', '5012345000152', now() - interval '120 days'),
-  ('e0000000-0000-4000-8000-000000000016', '5012345000152', now() - interval '120 days'),  -- same barcode, different label
-  ('e0000000-0000-4000-8000-000000000017', '5012345000176', now() - interval '120 days'),
-  ('e0000000-0000-4000-8000-000000000018', '5012345000183', now() - interval '120 days');
+insert into public.item_barcodes (item_id, barcode) values
+  ('e0000000-0000-4000-8000-000000000011', '5012345000114'),
+  ('e0000000-0000-4000-8000-000000000012', '5012345000121'),
+  ('e0000000-0000-4000-8000-000000000015', '5012345000152'),
+  ('e0000000-0000-4000-8000-000000000016', '5012345000152'),  -- same barcode, different label
+  ('e0000000-0000-4000-8000-000000000017', '5012345000176'),
+  ('e0000000-0000-4000-8000-000000000018', '5012345000183');
 
-insert into public.item_aliases (item_id, alias, alias_type, created_at) values
-  ('e0000000-0000-4000-8000-000000000001', 'PALE25',     'legacy_sku', now() - interval '120 days'),
-  ('e0000000-0000-4000-8000-000000000001', 'Maris',      'shop_floor_name', now() - interval '120 days'),
-  ('e0000000-0000-4000-8000-000000000019', 'CO2 small',  'shop_floor_name', now() - interval '120 days'),
-  ('e0000000-0000-4000-8000-000000000020', 'Big gas',    'shop_floor_name', now() - interval '120 days');
+insert into public.item_aliases (item_id, alias, alias_type) values
+  ('e0000000-0000-4000-8000-000000000001', 'PALE25',     'legacy_sku'),
+  ('e0000000-0000-4000-8000-000000000001', 'Maris',      'shop_floor_name'),
+  ('e0000000-0000-4000-8000-000000000019', 'CO2 small',  'shop_floor_name'),
+  ('e0000000-0000-4000-8000-000000000020', 'Big gas',    'shop_floor_name');
 
 -- ---------------------------------------------------------------------------
 -- Book position

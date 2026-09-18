@@ -6,12 +6,9 @@
  * Exists so the reconciliation can be watched working without a browser, which
  * is how most of its behaviour got checked in the first place.
  */
-import { existsSync } from 'node:fs';
 import { Pool } from 'pg';
 import { runReconciliation } from '../lib/engine-run';
 
-
-if (existsSync('.env.local')) process.loadEnvFile('.env.local');
 const siteId = process.argv[2] ?? 'b0000000-0000-4000-8000-000000000001';
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 

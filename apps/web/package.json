@@ -2,15 +2,13 @@
   "name": "@stocktruth/web",
   "private": true,
   "type": "module",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "test": "tsx --test 'lib/**/*.test.ts'",
     "typecheck": "tsc --noEmit",
-    "reconcile": "tsx scripts/reconcile.ts",
-    "explain": "tsx scripts/explain.ts",
     "stress": "tsx scripts/stress.ts"
   },
   "devDependencies": {
@@ -27,8 +25,5 @@
     "pg": "^8.23.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
-  },
-  "engines": {
-    "node": ">=22"
   }
 }
