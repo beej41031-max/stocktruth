@@ -1,6 +1,6 @@
 {
   "name": "@stocktruth/cli",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "type": "module",
   "description": "The reasoning engine with nothing else attached. No database, no server, no adapter. Evidence in as JSON, a conclusion out.",

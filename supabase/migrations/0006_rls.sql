@@ -319,8 +319,11 @@ create policy reconciliation_policies_write on public.reconciliation_policies
 -- Audit
 -- ---------------------------------------------------------------------------
 
--- Readable by anyone in the org; the triggers in 0005 stop anyone changing it.
--- Writes go through the service role from the server, so there is no insert
--- policy for browser clients on purpose.
+-- Readable by anyone in the org. UPDATE and DELETE are blocked by the
+-- append-only triggers in 0005.
+--
+-- User-driven server actions deliberately run as `authenticated` so RLS protects
+-- the business mutation. 0009 adds the matching INSERT policy that lets the same
+-- transaction append its own audit row without granting broader write access.
 create policy audit_events_read on public.audit_events
   for select using (public.is_org_member(organisation_id));

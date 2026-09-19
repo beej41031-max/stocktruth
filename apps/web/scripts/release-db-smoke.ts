@@ -15,12 +15,18 @@ try {
   await client.query(`select set_config('request.jwt.claim.sub', $1, true)`, [userId]);
   await client.query('set local role authenticated');
 
-  // Proves the app identity can enter the RLS-protected application schema.
-  await client.query('select id from sites limit 1');
+  const scope = await client.query<{ organisation_id: string; site_id: string }>(
+    `select s.organisation_id, s.id as site_id
+       from sites s
+      order by s.id
+      limit 1`,
+  );
+
+  const row = scope.rows[0];
+  if (!row) throw new Error('database smoke: authenticated user cannot see a site');
 
   // Proves the exact parameter typing used by resolveIssue() is accepted by
-  // the live schema. The random UUID intentionally matches no row, and the
-  // entire transaction is rolled back regardless.
+  // the live schema. The random UUID intentionally matches no issue.
   await client.query(
     `update reconciliation_issues
         set status = $2::public.issue_status,
@@ -36,8 +42,23 @@ try {
     [randomUUID(), 'open', 'investigating', 'release smoke — rolled back', userId, false],
   );
 
+  // Proves user-driven actions can append their own audit event while RLS is
+  // active. This is the exact permission path used after resolving an issue.
+  await client.query(
+    `insert into audit_events
+       (organisation_id, site_id, actor_user_id, actor_type,
+        event_type, object_type, detail)
+     values ($1,$2,$3,'user','RELEASE_DB_SMOKE','release_smoke',$4::jsonb)`,
+    [
+      row.organisation_id,
+      row.site_id,
+      userId,
+      JSON.stringify({ rolledBack: true }),
+    ],
+  );
+
   await client.query('rollback');
-  console.log('database smoke PASS');
+  console.log('database smoke PASS — RLS read, reconcile SQL and audit append');
 } catch (error) {
   await client.query('rollback').catch(() => {});
   throw error;

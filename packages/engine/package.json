@@ -1,6 +1,6 @@
 {
   "name": "@stocktruth/engine",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "type": "module",
   "description": "Decides what can honestly be said about a stock position, given evidence. No database, no schema, no opinions about where the data lives.",

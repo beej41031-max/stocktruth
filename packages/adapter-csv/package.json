@@ -1,6 +1,6 @@
 {
   "name": "@stocktruth/adapter-csv",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "type": "module",
   "description": "A deliberately dumb second EvidenceSource: plain CSV exports, no database. Proves the port is a real boundary rather than a Postgres-shaped comment.",

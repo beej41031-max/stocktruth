@@ -1,3 +1,19 @@
+# v0.3.1 — audit RLS hotfix
+
+Fixes user-driven issue resolution being rolled back when its append-only audit
+record was rejected by row-level security.
+
+The new policy permits an authenticated user to INSERT an audit row only when:
+- `actor_type = 'user'`;
+- `actor_user_id = auth.uid()`;
+- the user belongs to the organisation;
+- any supplied site belongs to that organisation and is accessible to the user.
+
+UPDATE and DELETE remain forbidden by the append-only audit triggers.
+
+`npm run verify:db` now tests this exact authenticated audit-insert path inside a
+transaction and rolls it back.
+
 # StockTruth 0.3.0 — portfolio final
 
 This release turns the original inventory reconciliation demo into a concrete
