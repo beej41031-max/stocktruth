@@ -31,6 +31,11 @@ import type {
   SourceHealth,
 } from './types';
 
+// Re-exported because it appears in EvidenceSource's own signature below.
+// Anyone implementing an adapter needs it from the same place they get
+// EvidenceSource, not by reaching into types.ts separately.
+export type { ReconciliationPolicy };
+
 /** Identifies one item at one location. Quantities are location-scoped. */
 export interface ScopeRef {
   itemId: string;

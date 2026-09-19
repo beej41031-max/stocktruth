@@ -74,7 +74,7 @@ export default async function Audit() {
                   {Object.entries(e.detail ?? {})
                     .filter(([, v]) => v !== null && typeof v !== 'object')
                     .map(([k, v]) => `${k}: ${v}`)
-                    .join(' Ã‚Â· ')}
+                    .join(' · ')}
                 </td>
               </tr>
             ))}

@@ -1,0 +1,26 @@
+{
+  "name": "@stocktruth/cli",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "The reasoning engine with nothing else attached. No database, no server, no adapter. Evidence in as JSON, a conclusion out.",
+  "bin": {
+    "stocktruth": "./src/index.ts"
+  },
+  "scripts": {
+    "demo": "tsx src/index.ts examples/pallet.json",
+    "demo:json": "tsx src/index.ts examples/clean.json --json",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@stocktruth/engine": "*"
+  },
+  "engines": {
+    "node": ">=22.11.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.13",
+    "typescript": "5.7.3",
+    "@types/node": "^22.20.3"
+  }
+}

@@ -1,161 +1,191 @@
-# StockTruth
+# StockTruth 0.3.0
 
-**Know what stock you have. Know why you believe it.**
+**A total is not a fact. It is a conclusion drawn from evidence.**
 
-A stock verification system for businesses that already have records and do not
-fully trust them. Not an ERP, and not an inventory spreadsheet with a nicer
-dashboard.
+StockTruth is the inventory reference implementation of a small event-driven
+operational truth engine. It is designed to sit around existing software rather
+than replace it.
 
-One rule, everywhere: **never turn incomplete evidence into false certainty.**
-When the system cannot justify a number it says so, says why, names the records
-involved, and says what would settle it.
+An ERP, WMS, spreadsheet or SaaS product can keep recording movements and
+showing operational screens. StockTruth asks the harder question:
 
----
+> Given everything currently known — including when it happened, when it was
+> recorded, what was physically observed and what evidence is missing — what
+> can we actually defend?
 
-## The case it was built for
+Sometimes the answer is a number. Sometimes the honest result is **cannot be
+stated**. In either case the engine returns the evidence and reason.
 
-```
-Can 440ml unprinted                                          PKG-CAN-440
+## The case it was built around
 
-  Book says            19,200     as at 22 Aug
-  Somebody counted     27,600     14 Sep, 12:02, packaging bay
-  On the shelf now     cannot be stated
+```text
+Can 440ml unprinted                                  PKG-CAN-440
 
-  Why:
-    M000004, 8400 each, arrived 2026-09-14T11:02Z but was not recorded
-    until 4 hours later. Count C000005 was taken at 12:02Z, in between.
-    So that delivery may or may not have been on the shelf when the
-    counter looked, and applying it would double-count while ignoring it
-    would undercount.
+book claim                19,200
+physical count            27,600        14 Sep 12:02
+receipt occurred          +8,400        14 Sep 11:02
+receipt recorded                        14 Sep 15:02
 
-    Ask whoever received the delivery or whoever counted, and record the
-    answer as a correcting movement. Or count PKG-CAN-440 again now,
-    which settles it without anyone having to remember.
+current position          CANNOT BE STATED
 ```
 
-Most inventory software prints 36,000 here and is confidently wrong by 8,400.
+Applying the receipt risks counting it twice if it was already on the shelf
+when the counter looked. Ignoring it risks missing it if it was not. Arithmetic
+is not the hard part; chronology is.
 
-## Knowledge can go backwards
+Before the late receipt became known, 27,600 was defensible. After the receipt
+arrived, confidence went backwards. That is expected: new evidence can reveal
+ambiguity that was present all along.
 
-Ask the same item what was known before that delivery note arrived:
+## The reusable boundary
 
-```
-As known at 2026-09-14T15:01Z    PROVISIONAL       27,600
-As known now                     cannot be stated
-```
-
-At 15:01 the count stood on its own and 27,600 was defensible. At 15:02 a
-delivery note arrived that could not be placed relative to the count, and the
-number had to be withdrawn.
-
-More evidence does not always mean more certainty. Sometimes it reveals an
-ambiguity that was there all along and nobody could see. A system that only
-ever gets more confident is not modelling knowledge, it is modelling optimism.
-
----
-
-## Shape
-
-```
-packages/engine/       the reasoning. No database, no schema, no dependencies
-apps/web/              Next.js on Vercel, Supabase Postgres
-  lib/adapters/        the Postgres adapter, one implementation of the port
-supabase/migrations/   schema, one concern per file, append-only
-docs/decisions/        why the awkward choices are the way they are
+```text
+ERP / WMS / SaaS ─┐
+Postgres ─────────┼── adapter ── canonical evidence ── reasoning engine
+CSV / Sheets ─────┤                                      │
+JSON / CLI ───────┘                                      ▼
+                                            assert / qualify / refuse
+                                                       + why
 ```
 
-The engine is a package. It takes plain evidence shapes and returns a
-conclusion. Hosts implement `EvidenceSource` from `packages/engine/src/ports.ts`,
-so a different company's inventory system can be fed through an adapter without
-touching any of the reasoning.
+The engine has no database, network or host schema. Hosts implement
+`EvidenceSource` and translate their own records into plain evidence shapes.
 
-That separation is enforced rather than intended: a test reads every file in the
-engine and fails if one imports anything outside the package or mentions a
-host's vocabulary in executable code. A second adapter made entirely of arrays
-drives the engine through all six states with no database involved, which is the
-cleanest proof the boundary is real.
+This repository contains three independent routes into the same reasoning:
 
-## The stress test
+- `apps/web/lib/adapters/postgres.ts` — the Supabase/Postgres host used by the UI
+- `packages/adapter-csv` — a flat-file snapshot adapter for a different business
+- `packages/cli` — JSON in, explanation out, with no database or web framework
 
-`npm run stress -- --items=10000 --movements=8` generates a seeded adversarial
-warehouse, loads it through the real Postgres adapter, reconciles every scope
-with the real engine, and checks the refusal invariant on each one. Last real
-run: 18,562 scopes, 74,801 evidence rows, **zero invariant failures**,
-43,969 scopes per second. `/stress` renders the committed result.
+The CSV adapter deliberately declares `supportsKnownAt = false`: a snapshot
+export cannot honestly reconstruct what the business knew last Tuesday. The
+boundary records that limitation instead of faking the answer.
 
-The 53 unit tests isolate one defect each. This throws every defect class the
-engine knows about at once, in combinations nobody chose, at a scale nobody is
-going to hand-check.
+## What the engine reasons about
 
-## Running it
+- physical observations versus book claims
+- `occurred_at` versus `recorded_at`
+- movement ordering around observations
+- stale evidence and silent feeds
+- duplicate-looking movements without auto-merging them
+- reversals without deleting the original event
+- ambiguous identities
+- unknown or mismatched units
+- impossible negative derived positions
+- historical **as-known-at** reconstruction where the adapter supports it
+
+Six output states are intentionally explicit:
+
+| State | Meaning |
+|---|---|
+| `VERIFIED` | evidence supports the current position |
+| `PROVISIONAL` | derivable, with a non-blocking caveat |
+| `STALE` | the observation is older than policy allows |
+| `INCOMPLETE` | required evidence is missing |
+| `CONFLICT` | evidence contradicts itself |
+| `UNVERIFIED` | no physical observation anchors the position |
+
+A blocking state cannot expose a derived quantity. Zero is never used as a
+stand-in for unknown.
+
+## Proof, not architecture theatre
+
+`npm run verify` runs the release gate:
+
+1. 53 focused engine tests
+2. CSV adapter tests, including quoted CSV and malformed numeric input
+3. strict TypeScript checks for engine, CSV adapter, CLI and web app
+4. the CSV demo through the real engine
+5. the JSON CLI demo through the real engine
+6. an optimised Next.js production build
+
+The committed stress report exercises 10,000+ deliberately awkward stock scopes
+through the production Postgres adapter and checks the refusal invariant on
+every result. `/stress` renders the evidence.
+
+`/system` explains the reusable kernel visually inside the portfolio app.
+
+## Repository
+
+```text
+packages/engine/         deterministic reasoning; no database or network
+packages/adapter-csv/    second EvidenceSource, flat files only
+packages/cli/            portable JSON → assertion interface
+apps/web/                Next.js reference application
+  lib/adapters/          Postgres EvidenceSource
+supabase/migrations/     schema, RLS and append-only audit rules
+docs/decisions/          the reasoning behind the awkward choices
+```
+
+## Local verification
+
+Requires Node 22.11+.
 
 ```bash
-npm install
-
-# schema, then demo data
-for f in supabase/migrations/*.sql; do psql "$DATABASE_URL" -f "$f"; done
-psql "$DATABASE_URL" -f supabase/seed.sql
-
-npm test                                       # 53 engine tests
-cd apps/web
-npx tsx scripts/reconcile.ts                   # run the engine over a site
-npx tsx scripts/explain.ts PKG-CAN-440         # prove a refusal from the records
-npm run dev
+npm ci
+npm run verify
 ```
 
-`DATABASE_URL` is required. `DEMO_USER_ID` stands in for auth locally.
+The web app needs:
 
-## The engine
+```text
+DATABASE_URL=...
+DEMO_USER_ID=11111111-1111-4111-8111-000000000001
+```
 
-Six states:
+For a local Supabase connection, the Session pooler on port 5432 is often the
+least surprising option. For Vercel, use the Transaction pooler on port 6543.
+Do not grant the app direct read access to Supabase's private `auth.users`
+table; public UI actor labels are derived from app-owned data instead.
 
-| | |
-|---|---|
-| `VERIFIED` | evidence supports a current position |
-| `PROVISIONAL` | derivable, with something non-critical noted |
-| `STALE` | the count is older than policy allows |
-| `INCOMPLETE` | required evidence missing, no position claimed |
-| `CONFLICT` | evidence contradicts itself |
-| `UNVERIFIED` | never physically counted |
+## Fresh Supabase setup
 
-Two numbers, separately answerable and both nullable:
+Apply migrations in numeric order, then the synthetic portfolio seed:
 
-- **derived quantity** — what is on the shelf now, anchored on the count
-- **variance at count** — how wrong the records were when somebody last looked,
-  computed only when the book can be carried forward without assuming anything
+```bash
+for f in supabase/migrations/*.sql; do psql "$DATABASE_URL" -f "$f"; done
+psql "$DATABASE_URL" -f supabase/seed.sql
+```
 
-A position is refused **if and only if** a blocking reason is present.
-`explain()` asserts that in both directions on every call and throws if it ever
-stops holding, so the rule cannot rot quietly.
+Then reconcile once:
 
-## Things it deliberately does not do
+```bash
+cd apps/web
+npx tsx scripts/reconcile.ts
+npx tsx scripts/explain.ts PKG-CAN-440
+```
 
-It does not convert units. A book figure in litres against an item held in
-drums is refused, because guessing that a case is twenty-four is how a wrong
-number gets an authoritative-looking source.
+Standalone scripts need the environment loaded by the shell; unlike Next.js,
+`tsx` does not automatically read `.env.local`.
 
-It does not merge duplicate movements. Two identical receipts minutes apart are
-usually one delivery keyed twice and occasionally two real deliveries. Merging
-the second case loses stock silently, so both are kept and a person is asked.
+## Vercel
 
-It does not link movements on a fuzzy code match. Close codes raise a question;
-nothing is attached automatically.
+Import the Git repository as a monorepo project and set the web application as
+the project root (`apps/web`). Keep the repository workspace intact — the app
+imports `@stocktruth/engine` from `packages/engine` and the Next config traces
+from the repository root for server output.
 
-It does not show the expected quantity before a count is entered. A count that
-was shown the answer is agreement, not evidence. Withheld at the server, not
-hidden in the UI.
+Set these Production environment variables:
 
-It does not call a difference a discrepancy. At the rack nobody knows whether a
-gap is shrinkage, a late delivery or a bad book figure.
+```text
+DATABASE_URL     Supabase Transaction pooler URL, port 6543
+DEMO_USER_ID     11111111-1111-4111-8111-000000000001
+```
 
-It does not delete. Corrections supersede, movements are reversed by linked
-movements, and the audit table refuses updates and deletes at the database.
+Before deploying a release, run `npm run verify` at repository root. With the
+Supabase environment loaded, also run `npm run verify:db`; it exercises the RLS
+entry path and the exact `/reconcile` enum-typed mutation inside a transaction
+and rolls it back.
 
-## Status
+## Deliberate non-features
 
-V0.1. Schema, engine, adapter port, reconciliation, blind counting, six screens,
-audit trail, bitemporal reconstruction.
+This is not an ERP and is not trying to become one. It does not implement
+purchasing, picking, billing, generic workflow automation or a dashboard
+builder. Those belong to the SaaS products around it.
 
-Not built: the staged CSV import UI (`import_runs` and `import_rows` exist and
-are seeded, the screens do not), offline counting, photo evidence, multi-site,
-billing.
+The reusable product is the reasoning boundary:
+
+> events are claims about change; observations anchor reality; assertions are
+> conclusions the evidence earns.
+
+StockTruth is the first concrete proof of that model.

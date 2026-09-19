@@ -1,0 +1,9 @@
+id,sku,name,unit,active,blocked,blocked_reason
+item-a4-80,PAP-A4-80,A4 copier paper 80gsm ream,ream,true,false,
+item-a4-100,PAP-A4-100,A4 premium paper 100gsm ream,ream,true,false,
+item-env-c5,ENV-C5-WHT,C5 white envelope box of 500,box,true,false,
+item-ink-blk,INK-HP-BLK,HP compatible black ink cartridge,each,true,false,
+item-ink-clr,INK-HP-CLR,HP compatible colour ink cartridge,each,true,false,
+item-tnr-old,TNR-DISC-01,Discontinued toner cartridge,each,false,false,
+item-lam-a4,LAM-A4-125,A4 laminating pouches 125 micron box of 100,box,true,false,
+item-staple,STP-26-6,Staples 26/6 box of 5000,box,true,true,two different supplier boxes were relabelled under this code after a packaging change

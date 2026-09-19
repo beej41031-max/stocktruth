@@ -60,6 +60,11 @@ export default async function Control() {
 
       {example && <EvidenceReel data={example} />}
 
+      <Link href="/system" className="kernel-strip">
+        <span>A total is not a fact.</span>
+        <strong>See how the same reasoning kernel sits behind Postgres, CSV and JSON →</strong>
+      </Link>
+
       <div className="stat-line">
         <span className="stat-figure">{pct}%</span>
         <span className="stat-caption">

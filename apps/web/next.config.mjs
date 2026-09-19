@@ -5,13 +5,15 @@ const here = dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 export default {
-  transpilePackages: ['@stocktruth/engine'],
+  // This is a workspace app. Keep tracing rooted at the repository so the
+  // engine package is included in Vercel's server output.
   outputFileTracingRoot: resolve(here, '../..'),
-  // pg opens real sockets; it must not be bundled into the server build.
+  transpilePackages: ['@stocktruth/engine'],
+
+  // pg opens real sockets; it must stay a server external.
   serverExternalPackages: ['pg'],
+
   webpack(config) {
-    // The tsconfig paths alias is not picked up reliably in an ESM package,
-    // so it is stated here too rather than left to chance.
     config.resolve.alias['@'] = resolve(here);
     return config;
   },

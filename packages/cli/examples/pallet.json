@@ -1,0 +1,44 @@
+{
+  "item": {
+    "id": "item-can-440",
+    "sku": "PKG-CAN-440",
+    "name": "Can 440ml unprinted",
+    "stockUnit": "each",
+    "active": true,
+    "blocked": false
+  },
+  "locationId": "loc-packaging-bay",
+  "book": {
+    "id": "book-1",
+    "quantity": 19200,
+    "unit": "each",
+    "asOf": "2026-08-22T00:00:00Z",
+    "sourceSystemId": "src-spreadsheet"
+  },
+  "count": {
+    "id": "count-92",
+    "quantity": 27600,
+    "unit": "each",
+    "countedAt": "2026-09-14T12:02:00Z",
+    "receivedAt": "2026-09-14T12:02:00Z",
+    "countedBy": "rana",
+    "sessionId": "sess-1",
+    "sessionWatermark": "2026-09-14T11:42:00Z"
+  },
+  "movements": [
+    {
+      "id": "receipt-184",
+      "type": "RECEIVE",
+      "quantity": 8400,
+      "unit": "each",
+      "occurredAt": "2026-09-14T11:02:00Z",
+      "recordedAt": "2026-09-14T15:02:00Z",
+      "importedAt": "2026-09-14T15:02:00Z",
+      "sourceSystemId": "src-warehouse"
+    }
+  ],
+  "unlinkedMovementCount": 0,
+  "possiblyRelatedUnlinkedCount": 0,
+  "sources": [],
+  "evaluatedAt": "2026-09-17T09:00:00Z"
+}

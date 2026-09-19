@@ -100,10 +100,12 @@ export async function loadCanonicalExample(
     ]);
     locationCode = loc.rows[0]?.code ?? null;
   }
-  // Do not query Supabase's private auth schema from app code.
-  // The demo only needs to show that a signed-in actor performed the count.
+
+  // Do not couple application reads to Supabase's private auth schema.
+  // The public demo only needs to show that a signed-in actor made the count.
   const countedByName = scope.count?.countedBy ? 'Signed-in counter' : null;
-return {
+
+  return {
     itemId: item.id,
     sku: item.sku,
     name: item.name,

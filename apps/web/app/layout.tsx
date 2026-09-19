@@ -4,7 +4,7 @@ import Nav from './Nav';
 
 export const metadata = {
   title: 'StockTruth',
-  description: 'Know what stock you have. Know why you believe it.',
+  description: 'An event-driven inventory truth engine. A total is a conclusion drawn from evidence.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

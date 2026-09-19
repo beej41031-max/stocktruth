@@ -339,7 +339,7 @@ export async function resolveIssue(input: ResolveInput): Promise<{ ok: boolean; 
       `update reconciliation_issues
           set status = $2::public.issue_status,
               resolution = $3::public.issue_resolution,
-              resolution_note = $4,
+              resolution_note = $4::text,
               resolved_by = $5::uuid,
               resolved_at = case
                 when $2::public.issue_status = 'resolved'::public.issue_status then now()

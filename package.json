@@ -1,16 +1,26 @@
 {
   "name": "stocktruth",
   "private": true,
-  "version": "0.2.1",
+  "version": "0.3.0",
   "workspaces": [
     "packages/*",
     "apps/web"
   ],
   "scripts": {
-    "test": "npm run test --workspace packages/engine",
+    "test": "npm run test --workspace packages/engine && npm run test --workspace packages/adapter-csv",
+    "typecheck": "npm run typecheck --workspace packages/engine && npm run typecheck --workspace packages/adapter-csv && npm run typecheck --workspace packages/cli && npm run typecheck --workspace apps/web",
+    "demo:csv": "npm run demo --workspace packages/adapter-csv",
+    "demo:cli": "npm run demo --workspace packages/cli",
     "dev": "npm run dev --workspace apps/web",
     "build": "npm run build --workspace apps/web",
-    "typecheck": "npm run typecheck --workspace apps/web",
-    "stress": "npm run stress --workspace apps/web --"
+    "stress": "npm run stress --workspace apps/web --",
+    "verify": "npm test && npm run typecheck && npm run demo:csv && npm run demo:cli && npm run build",
+    "verify:db": "npm run smoke:db --workspace apps/web"
+  },
+  "overrides": {
+    "typescript": "5.7.3"
+  },
+  "engines": {
+    "node": ">=22.11.0"
   }
 }

@@ -1,0 +1,33 @@
+{
+  "item": {
+    "id": "item-hop-ctz",
+    "sku": "HOP-CTZ-5",
+    "name": "Columbus hop pellets 5kg",
+    "stockUnit": "box",
+    "active": true,
+    "blocked": false
+  },
+  "locationId": "loc-cold-store",
+  "book": {
+    "id": "book-2",
+    "quantity": 5,
+    "unit": "box",
+    "asOf": "2026-09-10T00:00:00Z",
+    "sourceSystemId": "src-spreadsheet"
+  },
+  "count": {
+    "id": "count-93",
+    "quantity": 3,
+    "unit": "box",
+    "countedAt": "2026-09-16T09:00:00Z",
+    "receivedAt": "2026-09-16T09:00:00Z",
+    "countedBy": "sam",
+    "sessionId": "sess-2",
+    "sessionWatermark": "2026-09-16T08:40:00Z"
+  },
+  "movements": [],
+  "unlinkedMovementCount": 0,
+  "possiblyRelatedUnlinkedCount": 0,
+  "sources": [],
+  "evaluatedAt": "2026-09-17T09:00:00Z"
+}

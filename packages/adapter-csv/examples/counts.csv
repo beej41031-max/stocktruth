@@ -1,0 +1,6 @@
+item_id,quantity,unit,counted_at,counted_by
+item-a4-80,118,ream,2026-09-16T10:00:00Z,priya
+item-a4-100,40,ream,2026-09-16T10:05:00Z,priya
+item-env-c5,3,box,2026-09-16T10:10:00Z,priya
+item-ink-blk,25,each,2026-09-16T10:15:00Z,priya
+item-lam-a4,6,box,2026-09-16T10:20:00Z,priya

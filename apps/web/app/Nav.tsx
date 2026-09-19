@@ -22,10 +22,11 @@ const GROUPS: [string, [string, string][]][] = [
     ],
   ],
   [
-    'Record',
+    'Proof',
     [
-      ['/audit', 'Audit'],
+      ['/system', 'System'],
       ['/stress', 'Stress test'],
+      ['/audit', 'Audit'],
     ],
   ],
 ];
