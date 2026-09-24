@@ -1,0 +1,625 @@
+{
+  "shop": "northfold-demo.myshopify.com",
+  "apiVersion": "2026-07",
+  "fetchedAt": "2026-09-22T18:00:00Z",
+  "ordersSince": "2026-09-21T00:00:00Z",
+  "locations": [
+    {
+      "id": "gid://shopify/Location/3001",
+      "name": "ParcelHouse Leeds (3PL)",
+      "isActive": true
+    },
+    {
+      "id": "gid://shopify/Location/3002",
+      "name": "Studio shop",
+      "isActive": true
+    }
+  ],
+  "variants": [
+    {
+      "variantId": "gid://shopify/ProductVariant/801",
+      "inventoryItemId": "gid://shopify/InventoryItem/901",
+      "sku": "TEE-BLK-M",
+      "title": "Black / M",
+      "productTitle": "Heavyweight tee",
+      "productStatus": "ACTIVE",
+      "tracked": true,
+      "levels": [
+        {
+          "locationId": "gid://shopify/Location/3001",
+          "onHand": 90,
+          "available": 87,
+          "committed": 3,
+          "updatedAt": "2026-09-22T17:40:00Z",
+          "damaged": 0,
+          "qualityControl": 0
+        }
+      ]
+    },
+    {
+      "variantId": "gid://shopify/ProductVariant/802",
+      "inventoryItemId": "gid://shopify/InventoryItem/902",
+      "sku": "TEE-BLK-L",
+      "title": "Black / L",
+      "productTitle": "Heavyweight tee",
+      "productStatus": "ACTIVE",
+      "tracked": true,
+      "levels": [
+        {
+          "locationId": "gid://shopify/Location/3001",
+          "onHand": 68,
+          "available": 67,
+          "committed": 1,
+          "updatedAt": "2026-09-22T17:40:00Z",
+          "damaged": 0,
+          "qualityControl": 0
+        }
+      ]
+    },
+    {
+      "variantId": "gid://shopify/ProductVariant/803",
+      "inventoryItemId": "gid://shopify/InventoryItem/903",
+      "sku": "TEE-WHT-M",
+      "title": "White / M",
+      "productTitle": "Heavyweight tee",
+      "productStatus": "ACTIVE",
+      "tracked": true,
+      "levels": [
+        {
+          "locationId": "gid://shopify/Location/3001",
+          "onHand": 36,
+          "available": 36,
+          "committed": 0,
+          "updatedAt": "2026-09-22T17:40:00Z",
+          "damaged": 0,
+          "qualityControl": 0
+        }
+      ]
+    },
+    {
+      "variantId": "gid://shopify/ProductVariant/804",
+      "inventoryItemId": "gid://shopify/InventoryItem/904",
+      "sku": "HOOD-GRY-M",
+      "title": "Grey / M",
+      "productTitle": "Loopback hoodie",
+      "productStatus": "ACTIVE",
+      "tracked": true,
+      "levels": [
+        {
+          "locationId": "gid://shopify/Location/3001",
+          "onHand": 23,
+          "available": 21,
+          "committed": 2,
+          "updatedAt": "2026-09-22T17:40:00Z",
+          "damaged": 0,
+          "qualityControl": 0
+        }
+      ]
+    },
+    {
+      "variantId": "gid://shopify/ProductVariant/805",
+      "inventoryItemId": "gid://shopify/InventoryItem/905",
+      "sku": "TOTE-NAT",
+      "title": "Default Title",
+      "productTitle": "Canvas tote",
+      "productStatus": "ACTIVE",
+      "tracked": true,
+      "levels": [
+        {
+          "locationId": "gid://shopify/Location/3001",
+          "onHand": 50,
+          "available": 50,
+          "committed": 0,
+          "updatedAt": "2026-09-22T17:40:00Z",
+          "damaged": 0,
+          "qualityControl": 0
+        }
+      ]
+    },
+    {
+      "variantId": "gid://shopify/ProductVariant/806",
+      "inventoryItemId": "gid://shopify/InventoryItem/906",
+      "sku": "TOTE-NAT",
+      "title": "Default Title",
+      "productTitle": "Canvas tote (old listing)",
+      "productStatus": "DRAFT",
+      "tracked": true,
+      "levels": [
+        {
+          "locationId": "gid://shopify/Location/3001",
+          "onHand": 0,
+          "available": 0,
+          "committed": 0,
+          "updatedAt": "2026-09-22T17:40:00Z",
+          "damaged": 0,
+          "qualityControl": 0
+        }
+      ]
+    },
+    {
+      "variantId": "gid://shopify/ProductVariant/807",
+      "inventoryItemId": "gid://shopify/InventoryItem/907",
+      "sku": "CAP-BLK",
+      "title": "Black",
+      "productTitle": "Six-panel cap",
+      "productStatus": "ACTIVE",
+      "tracked": false,
+      "levels": [
+        {
+          "locationId": "gid://shopify/Location/3001",
+          "onHand": 0,
+          "available": 0,
+          "committed": 0,
+          "updatedAt": "2026-09-22T17:40:00Z",
+          "damaged": 0,
+          "qualityControl": 0
+        }
+      ]
+    },
+    {
+      "variantId": "gid://shopify/ProductVariant/808",
+      "inventoryItemId": "gid://shopify/InventoryItem/908",
+      "sku": "SOCK-BLK-OS",
+      "title": "Black / One size",
+      "productTitle": "Rib socks",
+      "productStatus": "ACTIVE",
+      "tracked": true,
+      "levels": [
+        {
+          "locationId": "gid://shopify/Location/3001",
+          "onHand": 76,
+          "available": 76,
+          "committed": 0,
+          "updatedAt": "2026-09-22T17:40:00Z",
+          "damaged": 0,
+          "qualityControl": 0
+        }
+      ]
+    },
+    {
+      "variantId": "gid://shopify/ProductVariant/809",
+      "inventoryItemId": "gid://shopify/InventoryItem/909",
+      "sku": "MUG-WHT",
+      "title": "Default Title",
+      "productTitle": "Enamel mug",
+      "productStatus": "ACTIVE",
+      "tracked": true,
+      "levels": [
+        {
+          "locationId": "gid://shopify/Location/3001",
+          "onHand": 32,
+          "available": 32,
+          "committed": 0,
+          "updatedAt": "2026-09-22T17:40:00Z",
+          "damaged": 0,
+          "qualityControl": 0
+        }
+      ]
+    },
+    {
+      "variantId": "gid://shopify/ProductVariant/810",
+      "inventoryItemId": "gid://shopify/InventoryItem/910",
+      "sku": "BEANIE-NAVY",
+      "title": "Navy",
+      "productTitle": "Ribbed beanie",
+      "productStatus": "ACTIVE",
+      "tracked": true,
+      "levels": [
+        {
+          "locationId": "gid://shopify/Location/3001",
+          "onHand": 40,
+          "available": 40,
+          "committed": 0,
+          "updatedAt": "2026-09-22T17:40:00Z",
+          "damaged": 0,
+          "qualityControl": 0
+        },
+        {
+          "locationId": "gid://shopify/Location/3002",
+          "onHand": 8,
+          "available": 8,
+          "committed": 0,
+          "updatedAt": "2026-09-22T17:40:00Z",
+          "damaged": 0,
+          "qualityControl": 0
+        }
+      ]
+    },
+    {
+      "variantId": "gid://shopify/ProductVariant/811",
+      "inventoryItemId": "gid://shopify/InventoryItem/911",
+      "sku": "HOOD-GRY-L",
+      "title": "Grey / L",
+      "productTitle": "Loopback hoodie",
+      "productStatus": "ACTIVE",
+      "tracked": true,
+      "levels": [
+        {
+          "locationId": "gid://shopify/Location/3001",
+          "onHand": 22,
+          "available": 20,
+          "committed": 0,
+          "damaged": 2,
+          "qualityControl": 0,
+          "updatedAt": "2026-09-22T17:40:00Z"
+        }
+      ]
+    }
+  ],
+  "orders": [
+    {
+      "id": "gid://shopify/Order/1041",
+      "name": "#1041",
+      "createdAt": "2026-09-22T08:40:00Z",
+      "fulfillments": [
+        {
+          "id": "gid://shopify/Fulfillment/5001",
+          "status": "SUCCESS",
+          "createdAt": "2026-09-22T09:00:00Z",
+          "updatedAt": "2026-09-22T09:00:00Z",
+          "locationId": "gid://shopify/Location/3001",
+          "lines": [
+            {
+              "quantity": 5,
+              "inventoryItemId": "gid://shopify/InventoryItem/901",
+              "sku": "TEE-BLK-M",
+              "title": "Heavyweight tee - Black / M"
+            }
+          ]
+        }
+      ],
+      "refunds": []
+    },
+    {
+      "id": "gid://shopify/Order/1042",
+      "name": "#1042",
+      "createdAt": "2026-09-22T12:10:00Z",
+      "fulfillments": [
+        {
+          "id": "gid://shopify/Fulfillment/5002",
+          "status": "SUCCESS",
+          "createdAt": "2026-09-22T13:00:00Z",
+          "updatedAt": "2026-09-22T13:00:00Z",
+          "locationId": "gid://shopify/Location/3001",
+          "lines": [
+            {
+              "quantity": 7,
+              "inventoryItemId": "gid://shopify/InventoryItem/901",
+              "sku": "TEE-BLK-M",
+              "title": "Heavyweight tee - Black / M"
+            }
+          ]
+        }
+      ],
+      "refunds": [
+        {
+          "id": "gid://shopify/Refund/7001",
+          "createdAt": "2026-09-22T17:05:00Z",
+          "lines": [
+            {
+              "quantity": 1,
+              "inventoryItemId": "gid://shopify/InventoryItem/901",
+              "sku": "TEE-BLK-M",
+              "title": "Heavyweight tee - Black / M",
+              "id": "gid://shopify/RefundLineItem/7501",
+              "restockType": "NO_RESTOCK",
+              "restocked": false,
+              "locationId": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Order/1043",
+      "name": "#1043",
+      "createdAt": "2026-09-22T10:30:00Z",
+      "fulfillments": [
+        {
+          "id": "gid://shopify/Fulfillment/5003",
+          "status": "CANCELLED",
+          "createdAt": "2026-09-22T11:00:00Z",
+          "updatedAt": "2026-09-22T11:20:00Z",
+          "locationId": "gid://shopify/Location/3001",
+          "lines": [
+            {
+              "quantity": 2,
+              "inventoryItemId": "gid://shopify/InventoryItem/901",
+              "sku": "TEE-BLK-M",
+              "title": "Heavyweight tee - Black / M"
+            }
+          ]
+        }
+      ],
+      "refunds": []
+    },
+    {
+      "id": "gid://shopify/Order/1030",
+      "name": "#1030",
+      "createdAt": "2026-09-18T14:00:00Z",
+      "fulfillments": [],
+      "refunds": [
+        {
+          "id": "gid://shopify/Refund/7002",
+          "createdAt": "2026-09-22T15:00:00Z",
+          "lines": [
+            {
+              "quantity": 2,
+              "inventoryItemId": "gid://shopify/InventoryItem/901",
+              "sku": "TEE-BLK-M",
+              "title": "Heavyweight tee - Black / M",
+              "id": "gid://shopify/RefundLineItem/7502",
+              "restockType": "RETURN",
+              "restocked": true,
+              "locationId": "gid://shopify/Location/3001"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Order/1044",
+      "name": "#1044",
+      "createdAt": "2026-09-22T09:40:00Z",
+      "fulfillments": [
+        {
+          "id": "gid://shopify/Fulfillment/5004",
+          "status": "SUCCESS",
+          "createdAt": "2026-09-22T10:00:00Z",
+          "updatedAt": "2026-09-22T10:00:00Z",
+          "locationId": "gid://shopify/Location/3001",
+          "lines": [
+            {
+              "quantity": 6,
+              "inventoryItemId": "gid://shopify/InventoryItem/902",
+              "sku": "TEE-BLK-L",
+              "title": "Heavyweight tee - Black / L"
+            }
+          ]
+        }
+      ],
+      "refunds": []
+    },
+    {
+      "id": "gid://shopify/Order/1045",
+      "name": "#1045",
+      "createdAt": "2026-09-22T10:20:00Z",
+      "fulfillments": [
+        {
+          "id": "gid://shopify/Fulfillment/5005",
+          "status": "SUCCESS",
+          "createdAt": "2026-09-22T11:00:00Z",
+          "updatedAt": "2026-09-22T11:00:00Z",
+          "locationId": "gid://shopify/Location/3001",
+          "lines": [
+            {
+              "quantity": 4,
+              "inventoryItemId": "gid://shopify/InventoryItem/903",
+              "sku": "TEE-WHT-M",
+              "title": "Heavyweight tee - White / M"
+            }
+          ]
+        }
+      ],
+      "refunds": []
+    },
+    {
+      "id": "gid://shopify/Order/1046",
+      "name": "#1046",
+      "createdAt": "2026-09-22T11:30:00Z",
+      "fulfillments": [],
+      "refunds": [
+        {
+          "id": "gid://shopify/Refund/7003",
+          "createdAt": "2026-09-22T12:00:00Z",
+          "lines": [
+            {
+              "quantity": 1,
+              "inventoryItemId": "gid://shopify/InventoryItem/903",
+              "sku": "TEE-WHT-M",
+              "title": "Heavyweight tee - White / M",
+              "id": "gid://shopify/RefundLineItem/7503",
+              "restockType": "CANCEL",
+              "restocked": true,
+              "locationId": "gid://shopify/Location/3001"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Order/1047",
+      "name": "#1047",
+      "createdAt": "2026-09-22T09:10:00Z",
+      "fulfillments": [
+        {
+          "id": "gid://shopify/Fulfillment/5006",
+          "status": "SUCCESS",
+          "createdAt": "2026-09-22T09:30:00Z",
+          "updatedAt": "2026-09-22T09:30:00Z",
+          "locationId": "gid://shopify/Location/3001",
+          "lines": [
+            {
+              "quantity": 3,
+              "inventoryItemId": "gid://shopify/InventoryItem/904",
+              "sku": "HOOD-GRY-M",
+              "title": "Loopback hoodie - Grey / M"
+            }
+          ]
+        }
+      ],
+      "refunds": []
+    },
+    {
+      "id": "gid://shopify/Order/1031",
+      "name": "#1031",
+      "createdAt": "2026-09-19T10:00:00Z",
+      "fulfillments": [],
+      "refunds": [
+        {
+          "id": "gid://shopify/Refund/7004",
+          "createdAt": "2026-09-22T16:00:00Z",
+          "lines": [
+            {
+              "quantity": 1,
+              "inventoryItemId": "gid://shopify/InventoryItem/904",
+              "sku": "HOOD-GRY-M",
+              "title": "Loopback hoodie - Grey / M",
+              "id": "gid://shopify/RefundLineItem/7504",
+              "restockType": "RETURN",
+              "restocked": true,
+              "locationId": "gid://shopify/Location/3001"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Order/1048",
+      "name": "#1048",
+      "createdAt": "2026-09-22T10:05:00Z",
+      "fulfillments": [
+        {
+          "id": "gid://shopify/Fulfillment/5007",
+          "status": "SUCCESS",
+          "createdAt": "2026-09-22T10:30:00Z",
+          "updatedAt": "2026-09-22T10:30:00Z",
+          "locationId": "gid://shopify/Location/3001",
+          "lines": [
+            {
+              "quantity": 4,
+              "inventoryItemId": "gid://shopify/InventoryItem/908",
+              "sku": "SOCK-BLK-OS",
+              "title": "Rib socks"
+            }
+          ]
+        }
+      ],
+      "refunds": []
+    },
+    {
+      "id": "gid://shopify/Order/1049",
+      "name": "#1049",
+      "createdAt": "2026-09-22T13:40:00Z",
+      "fulfillments": [
+        {
+          "id": "gid://shopify/Fulfillment/5008",
+          "status": "SUCCESS",
+          "createdAt": "2026-09-22T14:00:00Z",
+          "updatedAt": "2026-09-22T14:00:00Z",
+          "locationId": "gid://shopify/Location/3001",
+          "lines": [
+            {
+              "quantity": 2,
+              "inventoryItemId": null,
+              "sku": "sock-blk-os ",
+              "title": "Socks (manual)"
+            }
+          ]
+        }
+      ],
+      "refunds": []
+    },
+    {
+      "id": "gid://shopify/Order/1020",
+      "name": "#1020",
+      "createdAt": "2026-09-15T09:00:00Z",
+      "fulfillments": [],
+      "refunds": [
+        {
+          "id": "gid://shopify/Refund/7005",
+          "createdAt": "2026-09-22T12:30:00Z",
+          "lines": [
+            {
+              "quantity": 2,
+              "inventoryItemId": "gid://shopify/InventoryItem/909",
+              "sku": "MUG-WHT",
+              "title": "Enamel mug",
+              "id": "gid://shopify/RefundLineItem/7505",
+              "restockType": "LEGACY_RESTOCK",
+              "restocked": true,
+              "locationId": "gid://shopify/Location/3001"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Order/1050",
+      "name": "#1050",
+      "createdAt": "2026-09-22T16:05:00Z",
+      "fulfillments": [
+        {
+          "id": "gid://shopify/Fulfillment/5009",
+          "status": "SUCCESS",
+          "createdAt": "2026-09-22T16:10:00Z",
+          "updatedAt": "2026-09-22T16:10:00Z",
+          "locationId": "gid://shopify/Location/3002",
+          "lines": [
+            {
+              "quantity": 1,
+              "inventoryItemId": "gid://shopify/InventoryItem/910",
+              "sku": "BEANIE-NAVY",
+              "title": "Ribbed beanie - Navy"
+            }
+          ]
+        }
+      ],
+      "refunds": []
+    }
+  ],
+  "transfers": [
+    {
+      "id": "gid://shopify/InventoryTransfer/61",
+      "name": "#T61",
+      "status": "PARTIALLY_RECEIVED",
+      "originLocationId": "gid://shopify/Location/3001",
+      "destinationLocationId": "gid://shopify/Location/3002",
+      "shipments": [
+        {
+          "id": "gid://shopify/InventoryShipment/71",
+          "status": "RECEIVED",
+          "dateCreated": "2026-09-22T11:30:00Z",
+          "dateShipped": "2026-09-22T12:00:00Z",
+          "dateReceived": "2026-09-22T15:00:00Z",
+          "lines": [
+            {
+              "inventoryItemId": "gid://shopify/InventoryItem/910",
+              "sku": "BEANIE-NAVY",
+              "quantity": 5,
+              "accepted": 3,
+              "rejected": 2,
+              "unreceived": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/InventoryTransfer/62",
+      "name": "#T62",
+      "status": "READY_TO_SHIP",
+      "originLocationId": "gid://shopify/Location/3001",
+      "destinationLocationId": "gid://shopify/Location/3002",
+      "shipments": [
+        {
+          "id": "gid://shopify/InventoryShipment/72",
+          "status": "DRAFT",
+          "dateCreated": "2026-09-22T14:00:00Z",
+          "dateShipped": null,
+          "dateReceived": null,
+          "lines": [
+            {
+              "inventoryItemId": "gid://shopify/InventoryItem/903",
+              "sku": "TEE-WHT-M",
+              "quantity": 4,
+              "accepted": 0,
+              "rejected": 0,
+              "unreceived": 4
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

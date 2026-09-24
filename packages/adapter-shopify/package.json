@@ -1,0 +1,24 @@
+{
+  "name": "@stocktruth/adapter-shopify",
+  "version": "0.5.2",
+  "private": true,
+  "type": "module",
+  "description": "Read-only Shopify EvidenceSource: Shopify's on-hand figure is the book, a 3PL stock report is the observation, fulfilments and restocked refunds are the movements.",
+  "scripts": {
+    "demo": "tsx examples/run.ts",
+    "test": "tsx --test test/adapter.test.ts test/client.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@stocktruth/engine": "*",
+    "@stocktruth/adapter-csv": "*"
+  },
+  "engines": {
+    "node": ">=22.11.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.13",
+    "typescript": "5.7.3",
+    "@types/node": "^22.20.3"
+  }
+}

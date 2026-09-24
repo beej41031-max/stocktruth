@@ -1,0 +1,28 @@
+{
+  "name": "@stocktruth/adapter-csv",
+  "version": "0.5.2",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "description": "A deliberately dumb second EvidenceSource: plain CSV exports, no database. Proves the port is a real boundary rather than a Postgres-shaped comment.",
+  "scripts": {
+    "demo": "tsx examples/run.ts",
+    "test": "tsx --test test/adapter.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@stocktruth/engine": "*"
+  },
+  "engines": {
+    "node": ">=22.11.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.13",
+    "typescript": "5.7.3",
+    "@types/node": "^22.20.3"
+  }
+}

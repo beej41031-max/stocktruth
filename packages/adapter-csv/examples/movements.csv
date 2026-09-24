@@ -1,0 +1,5 @@
+item_id,type,quantity,unit,occurred_at,recorded_at
+item-a4-80,RECEIVE,50,ream,2026-09-10T09:00:00Z,2026-09-10T09:00:00Z
+item-env-c5,ISSUE,15,box,2026-09-16T09:55:00Z,2026-09-16T14:00:00Z
+item-lam-a4,RECEIVE,2,box,2026-09-17T08:00:00Z,2026-09-17T08:00:00Z
+item-xyz-999,RECEIVE,10,each,2026-09-12T09:00:00Z,2026-09-12T09:00:00Z
