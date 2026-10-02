@@ -1,3 +1,37 @@
+# v0.6.0 — the drop-in, and answers a person can give
+
+## New: `packages/dropin`
+
+Shopify against a 3PL report in one HTML file that runs in the browser. No
+server, no uploads; a content security policy forbids network requests and the
+page can demonstrate it. Gaps in pounds when costs are given, questions ranked by
+what rides on them, a case file per SKU, an evidence pack for the 3PL, and a CSV.
+Answers to the engine's refusals can be entered, marked on the figures they
+touch, and taken back. Decision 0026.
+
+## Engine
+
+- **Changed:** `Movement.uniqueIdGuaranteed`. Between two rows from the same
+  source that numbers its own events, the suspected-duplicate rule no longer
+  applies. Default behaviour is unchanged. Six new tests.
+- **Added:** `ReconciliationInput.intervalAdjustments`, for a reported change
+  that has no time of its own. Applied to the position and the gap when the book
+  is newer than the count; blocks (`INTERVAL_ADJUSTMENT_UNPLACEABLE`) when there
+  is no such interval. Never becomes a movement. Nine new tests.
+- Duplicate grouping now uses union-find over linked pairs. Chains still group
+  as before.
+
+## Shopify adapter
+
+- Sets the flag on every movement. Throws if a movement id repeats in a snapshot.
+- Two new tests, including two same-size orders a minute apart.
+
+## Verification
+
+Engine 143, adapter-shopify 48, dropin 25.
+
+---
+
 # v0.5.2 — positioning cleanup, no functional change
 
 Docs and framing pass only, no code or test changes. The product's own

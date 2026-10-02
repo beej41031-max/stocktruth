@@ -1,9 +1,21 @@
 node_modules/
 .next/
-.env
-.env.local
+.vercel/
+coverage/
+*.log
 *.tsbuildinfo
 .DS_Store
+
+# Local environment files. Keep only the documented template.
+.env*
+!.env.example
+
+# Local keys should never be committed.
+*.pem
+*.key
+
+# Build output; the checked-in drop-in artifact lives at repository root.
+packages/dropin/dist/
 
 # Never package local TypeScript harness output beside engine sources.
 packages/engine/src/*.js

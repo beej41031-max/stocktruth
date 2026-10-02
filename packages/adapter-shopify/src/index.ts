@@ -219,8 +219,13 @@ export class ShopifyEvidenceSource implements EvidenceSource {
 
     // --- movements from orders ---------------------------------------------------
     const movements = new Map<string, Movement[]>();
+    const seenMovementIds = new Set<string>();
     const unlinkedByLocation = new Map<string, ShopifyLine[]>();
     const add = (inventoryItemId: string, locationId: string, m: Movement) => {
+      // the engine is told each of these is its own event, which holds only
+      // while no id repeats. overlapping pages in a snapshot would break that.
+      if (seenMovementIds.has(m.id)) throw new Error(`Movement ${m.id} appears twice in the snapshot`);
+      seenMovementIds.add(m.id);
       const key = scopeKey(inventoryItemId, locationId);
       movements.set(key, [...(movements.get(key) ?? []), m]);
     };
@@ -247,6 +252,7 @@ export class ShopifyEvidenceSource implements EvidenceSource {
       importedAt: fetchedAt,
       sourceSystemId: SHOPIFY_SOURCE,
       reversalOfId: reversalOfId ?? null,
+      uniqueIdGuaranteed: true,
     });
 
     for (const order of snapshot.orders) {

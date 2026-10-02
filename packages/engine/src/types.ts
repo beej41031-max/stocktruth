@@ -93,6 +93,14 @@ export interface Movement {
   importedAt: Date;
   sourceSystemId: string | null;
   reversalOfId?: string | null;
+  /**
+   * True when the source gives every physical event its own immutable id, so
+   * two rows from this source with different ids cannot be one event posted
+   * twice. Shopify fulfilments are like this; a hand-keyed ledger is not.
+   * Only ever relaxes the duplicate check between two rows from the same
+   * source. Decision 0026.
+   */
+  uniqueIdGuaranteed?: boolean;
 }
 
 export interface SourceHealth {
@@ -148,6 +156,14 @@ export interface ReconciliationInput {
    * adjustments, say. Defaults to true. See decision 0025.
    */
   movementFeedComplete?: boolean;
+  /**
+   * Physical changes somebody has reported that happened at some point between
+   * the count and the book's moment, with no time of their own. Signed: positive
+   * is stock in. They are applied to the position and to the gap but never given
+   * an instant they were not told. Only meaningful when the book is newer than
+   * the count; with no such interval they block. Decision 0026.
+   */
+  intervalAdjustments?: { id: string; quantity: number }[];
 }
 
 export interface ReconciliationOutput {
@@ -181,5 +197,6 @@ export interface ReconciliationOutput {
     countLineId?: string;
     movementIds: string[];
     ignoredMovementIds: string[];
+    intervalAdjustmentIds?: string[];
   };
 }

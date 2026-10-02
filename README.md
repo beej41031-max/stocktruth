@@ -1,4 +1,4 @@
-# StockTruth 0.5.2
+# StockTruth 0.6.0
 
 **A count is an observation. The second count closes the interval. The gap is margin.**
 
@@ -98,6 +98,16 @@ The CSV adapter deliberately declares `supportsKnownAt = false`: a snapshot
 export cannot honestly reconstruct what the business knew last Tuesday. The
 boundary records that limitation instead of faking the answer.
 
+
+## v0.6.0 the drop-in
+
+`packages/dropin` builds one HTML file: drop in a Shopify snapshot and a 3PL
+report and it shows what Shopify holds above and below the evidence, in pounds if
+costs are given, with the questions that clear the most of it ranked first. It
+runs in the page and makes no network requests. `npm run build:dropin`.
+
+The built page is `stocktruth-dropin.html` at the top of this folder. Double-click
+it. Press "Try the demo store" to see it on invented data.
 
 ## v0.5.0 Shopify, and a book newer than the count
 

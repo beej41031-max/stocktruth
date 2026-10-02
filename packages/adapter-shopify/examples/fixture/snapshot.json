@@ -6,7 +6,7 @@
   "locations": [
     {
       "id": "gid://shopify/Location/3001",
-      "name": "ParcelHouse Leeds (3PL)",
+      "name": "Demo Fulfilment (3PL)",
       "isActive": true
     },
     {

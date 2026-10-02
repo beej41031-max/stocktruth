@@ -215,6 +215,16 @@ export const REASONS = {
     remedy: 'the adjustment replaced by an explicitly directed movement',
   },
 
+  INTERVAL_ADJUSTMENT_UNPLACEABLE: {
+    code: 'INTERVAL_ADJUSTMENT_UNPLACEABLE',
+    severity: 'high',
+    short: 'A reported change has no interval to belong to',
+    action:
+      'A change with no time can only be placed between a count and a later book figure. Give it a time, or take a count after the system figure.',
+    blocks: true,
+    remedy: 'the change given a time, or a count taken after the latest system update',
+  },
+
   // --- source health -------------------------------------------------------
   SOURCE_FEED_STALE: {
     code: 'SOURCE_FEED_STALE',

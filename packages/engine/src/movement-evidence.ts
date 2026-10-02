@@ -61,35 +61,30 @@ export function findSuspectedDuplicateMovementGroups(
       return time !== 0 ? time : a.id.localeCompare(b.id);
     });
 
-    let cluster: Array<Movement & { occurredAt: Date }> = [];
-
-    const flush = () => {
-      if (cluster.length > 1) {
-        groups.push({
-          movementIds: cluster.map((movement) => movement.id),
-          movements: [...cluster],
-        });
-      }
-      cluster = [];
-    };
-
-    for (const movement of sorted) {
-      if (cluster.length === 0) {
-        cluster.push(movement);
-        continue;
-      }
-
-      const previous = cluster[cluster.length - 1]!;
-      const delta = movement.occurredAt.getTime() - previous.occurredAt.getTime();
-      if (delta <= windowMs) {
-        cluster.push(movement);
-      } else {
-        flush();
-        cluster.push(movement);
+    // two rows are linked when they are close in time, unless the same source
+    // vouches that each of them is its own event
+    const parent = sorted.map((_, i) => i);
+    const root = (i: number): number => (parent[i] === i ? i : (parent[i] = root(parent[i]!)));
+    for (let i = 0; i < sorted.length; i++) {
+      for (let j = i + 1; j < sorted.length; j++) {
+        const a = sorted[i]!;
+        const b = sorted[j]!;
+        if (b.occurredAt.getTime() - a.occurredAt.getTime() > windowMs) break;
+        const distinct =
+          a.uniqueIdGuaranteed === true &&
+          b.uniqueIdGuaranteed === true &&
+          a.sourceSystemId != null &&
+          a.sourceSystemId === b.sourceSystemId;
+        if (!distinct) parent[root(j)] = root(i);
       }
     }
 
-    flush();
+    const clusters = new Map<number, Array<Movement & { occurredAt: Date }>>();
+    sorted.forEach((m, i) => clusters.set(root(i), [...(clusters.get(root(i)) ?? []), m]));
+    for (const cluster of clusters.values()) {
+      if (cluster.length < 2) continue;
+      groups.push({ movementIds: cluster.map((m) => m.id), movements: cluster });
+    }
   }
 
   return groups.sort((a, b) => {

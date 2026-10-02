@@ -166,7 +166,9 @@ function hypothetical(
     return { quantity: null, assuming: ['the identity is settled first, since nothing follows until it is'] };
   }
 
-  return { quantity: count.quantity + net, assuming };
+  const placed = input.book?.asOf && input.book.asOf.getTime() > count.countedAt.getTime();
+  const interval = placed ? (input.intervalAdjustments ?? []).reduce((sum, a) => sum + a.quantity, 0) : 0;
+  return { quantity: count.quantity + net + interval, assuming };
 }
 
 function signOf(type: string): 1 | -1 {

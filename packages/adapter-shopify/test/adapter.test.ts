@@ -22,7 +22,7 @@ const dir = join(fileURLToPath(new URL('.', import.meta.url)), '../examples/fixt
 const WH = 'gid://shopify/Location/3001';
 const STUDIO = 'gid://shopify/Location/3002';
 const snapshot = (): ShopifySnapshot => JSON.parse(readFileSync(join(dir, 'snapshot.json'), 'utf8'));
-const report = () => readThreePlReport(join(dir, '3pl-report.csv'), 'ParcelHouse Leeds', 'rep-0922');
+const report = () => readThreePlReport(join(dir, '3pl-report.csv'), 'Demo Fulfilment', 'rep-0922');
 const opts = { locationMap: { LEEDS: WH } };
 
 async function run(snap = snapshot(), rep = report()) {
@@ -316,4 +316,26 @@ test('a receipt in two batches either side of the report is refused, never false
   assert.equal(r.derivedQuantity, null, 'no position is stated');
   assert.ok(r.reasons.includes('BOOK_GAP_UNATTRIBUTABLE'));
   assert.equal(r.varianceAtCount, -2, 'the gap is the undated batch, and it is reported');
+});
+
+test('two orders for the same SKU and quantity minutes apart are two shipments, not a suspected duplicate', async () => {
+  const snap = snapshot();
+  const base = snap.orders[0]!;
+  const twin = structuredClone(base);
+  twin.id = 'gid://shopify/Order/9999';
+  twin.name = '#9999';
+  twin.fulfillments[0]!.id = 'gid://shopify/Fulfillment/9999';
+  twin.fulfillments[0]!.createdAt = new Date(Date.parse(base.fulfillments[0]!.createdAt) + 60_000).toISOString();
+  snap.orders.push(twin);
+  const source = new ShopifyEvidenceSource(snap, report(), opts);
+  const scopes = await source.loadSite({ siteId: 'x' });
+  const scope = scopes.find((s) => s.item.sku === 'TEE-BLK-M' && s.locationId === WH)!;
+  const out = reconcile({ item: scope.item, locationId: scope.locationId, book: scope.book, count: scope.count, movements: scope.movements, unlinkedMovementCount: scope.unlinkedMovementCount, possiblyRelatedUnlinkedCount: scope.possiblyRelatedUnlinkedCount, sources: scope.sources, policy: { ...DEFAULT_POLICY }, evaluatedAt: new Date(snap.fetchedAt), movementFeedComplete: scope.movementFeedComplete });
+  assert.equal(out.reasons.includes('SUSPECTED_DUPLICATE_MOVEMENT'), false);
+});
+
+test('the same fulfilment appearing twice in a snapshot is refused, because the guarantee above would no longer hold', () => {
+  const snap = snapshot();
+  snap.orders.push(structuredClone(snap.orders[0]!));
+  assert.throws(() => new ShopifyEvidenceSource(snap, report(), opts), /appears twice/);
 });

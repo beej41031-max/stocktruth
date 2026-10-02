@@ -1,6 +1,6 @@
 {
   "name": "@stocktruth/engine",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "description": "Decides what can honestly be said about a stock position, given evidence. No database, no schema, no opinions about where the data lives.",
@@ -10,7 +10,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "tsx --test test/reconcile.test.ts test/explain.test.ts test/isolation.test.ts test/variance.test.ts test/operational.test.ts test/closure.test.ts test/newer-book.test.ts",
+    "test": "tsx --test test/reconcile.test.ts test/explain.test.ts test/isolation.test.ts test/variance.test.ts test/operational.test.ts test/closure.test.ts test/newer-book.test.ts test/unique-ids.test.ts test/interval-adjustment.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "engines": {

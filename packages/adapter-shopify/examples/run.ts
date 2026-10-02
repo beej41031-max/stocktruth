@@ -65,7 +65,7 @@ if (live) {
 } else {
   snapshot = JSON.parse(readFileSync(join(here, 'fixture/snapshot.json'), 'utf8'));
   reportPath = join(here, 'fixture/3pl-report.csv');
-  provider = 'ParcelHouse Leeds';
+  provider = 'Demo Fulfilment';
   locationMap = { LEEDS: 'gid://shopify/Location/3001' };
   evaluatedAt = new Date(snapshot.fetchedAt);
 }

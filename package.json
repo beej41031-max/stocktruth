@@ -1,14 +1,14 @@
 {
   "name": "stocktruth",
   "private": true,
-  "version": "0.5.2",
+  "version": "0.6.0",
   "workspaces": [
     "packages/*",
     "apps/web"
   ],
   "scripts": {
-    "test": "npm run test --workspace packages/engine && npm run test --workspace packages/adapter-csv && npm run test --workspace packages/adapter-shopify",
-    "typecheck": "npm run typecheck --workspace packages/engine && npm run typecheck --workspace packages/adapter-csv && npm run typecheck --workspace packages/adapter-shopify && npm run typecheck --workspace packages/cli && npm run typecheck --workspace apps/web",
+    "test": "npm run test --workspace packages/engine && npm run test --workspace packages/adapter-csv && npm run test --workspace packages/adapter-shopify && npm run test --workspace packages/dropin",
+    "typecheck": "npm run typecheck --workspace packages/engine && npm run typecheck --workspace packages/adapter-csv && npm run typecheck --workspace packages/adapter-shopify && npm run typecheck --workspace packages/cli && npm run typecheck --workspace apps/web && npm run typecheck --workspace packages/dropin",
     "demo:csv": "npm run demo --workspace packages/adapter-csv",
     "demo:shopify": "npm run demo --workspace packages/adapter-shopify",
     "demo:cli": "npm run demo --workspace packages/cli",
@@ -16,8 +16,9 @@
     "build": "npm run build --workspace apps/web",
     "stress": "npm run stress --workspace apps/web --",
     "variance": "npm run variance --workspace apps/web --",
-    "verify": "npm test && npm run typecheck && npm run demo:csv && npm run demo:shopify && npm run demo:cli && npm run build",
-    "verify:db": "npm run smoke:db --workspace apps/web"
+    "verify": "npm test && npm run typecheck && npm run demo:csv && npm run demo:shopify && npm run demo:cli && npm run build:dropin && npm run build",
+    "verify:db": "npm run smoke:db --workspace apps/web",
+    "build:dropin": "npm run build --workspace packages/dropin"
   },
   "overrides": {
     "typescript": "5.7.3"

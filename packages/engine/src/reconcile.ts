@@ -9,7 +9,7 @@ import {
 import { type ReasonCode } from './reasons';
 import { findSuspectedDuplicateMovementGroups, removeReversalPairs } from './movement-evidence';
 
-export const ENGINE_VERSION = '0.5.2';
+export const ENGINE_VERSION = '0.6.0';
 
 const MS_PER_DAY = 86_400_000;
 const MS_PER_MIN = 60_000;
@@ -45,6 +45,8 @@ export function reconcile(input: ReconciliationInput): ReconciliationOutput {
   const reasons = new Set<ReasonCode>();
   const usedMovementIds: string[] = [];
   const ignoredMovementIds: string[] = [];
+  const intervalAdjustments = input.intervalAdjustments ?? [];
+  let intervalNet = 0;
 
   const out = (state: ReconciliationState, extra: Partial<ReconciliationOutput> = {}): ReconciliationOutput => ({
     state,
@@ -64,6 +66,7 @@ export function reconcile(input: ReconciliationInput): ReconciliationOutput {
       countLineId: count?.id,
       movementIds: usedMovementIds,
       ignoredMovementIds,
+      ...(intervalNet !== 0 || intervalAdjustments.length ? { intervalAdjustmentIds: intervalAdjustments.map((a) => a.id) } : {}),
     },
     ...extra,
   });
@@ -263,7 +266,19 @@ export function reconcile(input: ReconciliationInput): ReconciliationOutput {
     else usedMovementIds.push(m.id);
   }
 
-  const derived = count.quantity + netAfter;
+  // A reported change with no time of its own belongs to the interval between
+  // the count and the book's moment, and only to that. Without a newer book
+  // there is no such interval and nowhere honest to put it.
+  if (intervalAdjustments.length) {
+    const invalid = intervalAdjustments.some((a) => !Number.isFinite(a.quantity) || a.quantity === 0);
+    if (invalid || !book?.asOf || book.asOf.getTime() <= count.countedAt.getTime()) {
+      reasons.add('INTERVAL_ADJUSTMENT_UNPLACEABLE');
+    } else {
+      intervalNet = intervalAdjustments.reduce((sum, a) => sum + a.quantity, 0);
+    }
+  }
+
+  const derived = count.quantity + netAfter + intervalNet;
 
   // -------------------------------------------------------------------------
   // 7. Variance at the moment of counting. Separate question from "what is on
@@ -321,7 +336,7 @@ export function reconcile(input: ReconciliationInput): ReconciliationOutput {
       const netBetween = between.reduce((sum, m) => sum + MOVEMENT_SIGN[m.type] * m.quantity, 0);
       // Same sign convention as the older-book case: physical evidence minus
       // the book, at one shared moment.
-      varianceAtCount = count.quantity + netBetween - book.quantity;
+      varianceAtCount = count.quantity + netBetween + intervalNet - book.quantity;
       if (varianceAtCount !== 0 && !movementFeedComplete) {
         // The platform may have changed stock in a way the feed cannot show.
         // An unseen receipt and real loss produce the same gap; the gap is
@@ -406,12 +421,13 @@ export function reconcile(input: ReconciliationInput): ReconciliationOutput {
     'MOVEMENT_SPANS_COUNT',
     'MOVEMENT_MAY_BELONG_HERE',
     'ADJUSTMENT_IN_INTERVAL',
+    'INTERVAL_ADJUSTMENT_UNPLACEABLE',
     'BOOK_GAP_UNATTRIBUTABLE',
   ];
   const isBlocked = blocking.some((c) => reasons.has(c));
 
   const common = {
-    movementNet: netAfter,
+    movementNet: netAfter + intervalNet,
     movementWindowStart: count.countedAt,
     movementWindowEnd: evaluatedAt,
     varianceAtCount,
